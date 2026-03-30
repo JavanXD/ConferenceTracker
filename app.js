@@ -392,9 +392,9 @@
           <td>${escapeHtml(normalize(r.cfp_deadline_month))}</td>
           <td>${renderTrackBadges(r.submission_tracks)}</td>
           <td>${escapeHtml(normalize(r.travel_accommodation_sponsorship))}</td>
-          <td>${escapeHtml(normalize(r.cfp_deadline))}</td>
-          <td>${escapeHtml(normalize(r.cft_deadline))}</td>
-          <td>${escapeHtml(normalize(r.cfw_deadline))}</td>
+          <td>${renderDeadlineValue(r, "cfp_deadline", "accepts_cfp")}</td>
+          <td>${renderDeadlineValue(r, "cft_deadline", "accepts_cft")}</td>
+          <td>${renderDeadlineValue(r, "cfw_deadline", "accepts_cfw")}</td>
           <td>${escapeHtml(normalize(r.conference_start_date))}</td>
           <td>${escapeHtml(normalize(r.conference_end_date))}</td>
           <td>${escapeHtml(normalize(r.city))}</td>
@@ -442,10 +442,24 @@
     }
 
     function renderNextDeadline(row) {
+      const acceptsCfp = normalize(row.accepts_cfp);
+      const acceptsCft = normalize(row.accepts_cft);
+      const acceptsCfw = normalize(row.accepts_cfw);
+      if (acceptsCfp === "No" && acceptsCft === "No" && acceptsCfw === "No") {
+        return `<span class="pill pill-na">N/A</span>`;
+      }
       const info = getNextDeadlineInfo(row);
       if (!info) return `<span class="pill pill-unknown">TBD</span>`;
       const cls = info.daysUntil <= 30 ? "pill-deadline-soon" : "pill-deadline-upcoming";
       return `<span class="pill ${cls}">${info.label} ${escapeHtml(info.monthDay)} (${info.daysUntil}d)</span>`;
+    }
+
+    function renderDeadlineValue(row, deadlineKey, acceptsKey) {
+      const deadline = normalize(row[deadlineKey]);
+      const accepts = normalize(row[acceptsKey]);
+      if (deadline && deadline.toUpperCase() !== "TBD") return escapeHtml(deadline);
+      if (accepts === "No") return `<span class="pill pill-na">N/A</span>`;
+      return "TBD";
     }
 
     function toPill(value) {

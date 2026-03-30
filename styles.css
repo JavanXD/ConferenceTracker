@@ -296,7 +296,12 @@ a { color: var(--accent); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 460px;
+  max-width: 680px;
+}
+
+th:first-child,
+td:first-child {
+  width: 360px;
 }
 
 .track-badges {
@@ -355,6 +360,7 @@ a { color: var(--accent); }
 .pill-yes { border-color: #2e7d5f; color: #7ff0bd; }
 .pill-no { border-color: #7d2e40; color: #ff9eb3; }
 .pill-unknown { border-color: #7b6a2a; color: #ffd98f; }
+.pill-na { border-color: #49616a; color: #b9cbd1; }
 .pill-deadline-soon { border-color: #934b23; color: #ffb889; }
 .pill-deadline-upcoming { border-color: #2e5f8a; color: #9fd6ff; }
 .shortcut-help {
