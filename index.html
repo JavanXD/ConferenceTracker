@@ -66,9 +66,23 @@
       <div>
         <h1 id="pageTitle">Cybersecurity, InfoSec & Hacking Conference Tracker</h1>
         <p class="meta">Tracks CFP/CFT/CFW opportunities for cyber security conferences with live filtering and map insights</p>
+        <div class="project-links">
+          <a
+            class="github-link"
+            href="https://github.com/javanXD/ConferenceTracker"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open GitHub repository"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.34c-2.24.49-2.71-1.08-2.71-1.08-.36-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.81.06 1.24.84 1.24.84.71 1.23 1.87.87 2.33.67.07-.53.28-.88.5-1.08-1.78-.21-3.64-.89-3.64-3.96 0-.88.31-1.59.83-2.15-.08-.2-.36-1.01.08-2.1 0 0 .67-.22 2.2.82a7.53 7.53 0 0 1 4.01 0c1.53-1.04 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.52.56.83 1.27.83 2.15 0 3.08-1.87 3.75-3.65 3.96.29.25.54.73.54 1.47v2.18c0 .21.14.45.55.38A8 8 0 0 0 8 0Z"></path>
+            </svg>
+            <span>GitHub Repo</span>
+          </a>
+          <a href="./CONTRIBUTING.md">How to contribute data fixes</a>
+        </div>
       </div>
       <div class="actions">
-        <button id="reloadBtn" aria-keyshortcuts="Alt+R" title="Reload CSV (Alt+R)">Reload CSV</button>
         <button id="resetBtn" aria-keyshortcuts="Alt+0" title="Clear all filters and sorting (Alt+0)">Reset All Filters</button>
         <button id="shortcutsBtn" aria-expanded="false" aria-controls="shortcutHelp" aria-keyshortcuts="Alt+K" title="Toggle keyboard shortcuts (Alt+K)">Shortcuts</button>
       </div>
@@ -138,9 +152,12 @@
       <div class="shortcut-help hidden" id="shortcutHelp">
         <strong>Keyboard shortcuts:</strong>
         <span><kbd>Alt</kbd>+<kbd>F</kbd> focus search, </span>
-        <span><kbd>Alt</kbd>+<kbd>R</kbd> reload CSV, </span>
         <span><kbd>Alt</kbd>+<kbd>0</kbd> reset filters, </span>
         <span><kbd>Alt</kbd>+<kbd>K</kbd> toggle this help.</span>
+      </div>
+      <div class="contrib-note">
+        <strong>Found missing or wrong data?</strong>
+        Fork the repo, update <code>conferences.csv</code>, and open a PR with changed conference names and source links.
       </div>
     </section>
 
@@ -169,7 +186,6 @@
                 <th data-sort-key="conference_end_date" class="clickable-th">End</th>
                 <th data-sort-key="city" class="clickable-th">City</th>
                 <th data-sort-key="country" class="clickable-th">Country</th>
-              <th data-sort-key="venue_pattern" class="clickable-th">Venue Pattern</th>
                 <th>Website/CfP</th>
                 <th>CfT Link</th>
                 <th>CfW Link</th>

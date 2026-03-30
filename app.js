@@ -52,7 +52,6 @@
       dataThead: document.querySelector("#dataTable thead"),
       dataTbody: document.querySelector("#dataTable tbody"),
       emptyState: document.getElementById("emptyState"),
-      reloadBtn: document.getElementById("reloadBtn"),
       resetBtn: document.getElementById("resetBtn"),
       tabDashboard: document.getElementById("tabDashboard"),
       tabMap: document.getElementById("tabMap"),
@@ -400,7 +399,6 @@
           <td>${escapeHtml(normalize(r.conference_end_date))}</td>
           <td>${escapeHtml(normalize(r.city))}</td>
           <td>${escapeHtml(normalize(r.country))}</td>
-          <td>${escapeHtml(normalize(r.venue_pattern))}</td>
           <td>${linkOrText(r.website_or_cfp_link)}</td>
           <td>${linkOrText(r.cft_link)}</td>
           <td>${linkOrText(r.cfw_link)}</td>
@@ -1053,7 +1051,6 @@
       const rerenderOnInput = [el.searchInput, el.attendeesFilter, el.acceptsCfpFilter, el.acceptsCftFilter, el.acceptsCfwFilter, el.academicFilter, el.sponsorshipFilter, el.typeFilter, el.monthFilter, el.venuePatternFilter, el.sortFilter];
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("input", rerender));
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("change", rerender));
-      if (el.reloadBtn) el.reloadBtn.addEventListener("click", loadCsvAndRender);
       if (el.resetBtn) el.resetBtn.addEventListener("click", resetFilters);
       if (el.shortcutsBtn && el.shortcutHelp) {
         el.shortcutsBtn.addEventListener("click", () => {
@@ -1103,9 +1100,6 @@
           event.preventDefault();
           el.searchInput?.focus();
           el.searchInput?.select();
-        } else if (key === "r") {
-          event.preventDefault();
-          loadCsvAndRender();
         } else if (key === "0") {
           event.preventDefault();
           resetFilters();
