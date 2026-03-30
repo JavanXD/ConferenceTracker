@@ -110,6 +110,31 @@ h2 { font-size: 1.1rem; color: var(--muted); }
   margin-top: 6px;
 }
 
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 10px;
+  font-size: 0.86rem;
+}
+.project-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.project-links a:hover {
+  text-decoration: underline;
+}
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.github-link svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
 .actions {
   display: flex;
   gap: 8px;
@@ -349,6 +374,19 @@ a { color: var(--accent); }
   background: #0c1410;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8rem;
+}
+.contrib-note {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #0c1410;
+  color: var(--muted);
+  padding: 10px 12px;
+  font-size: 0.84rem;
+}
+.contrib-note strong {
+  color: var(--text);
+  margin-right: 4px;
 }
 .hidden { display: none; }
 .tab-nav {
