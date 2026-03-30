@@ -2,6 +2,20 @@
 
 Track cybersecurity, infosec, and hacking speaking opportunities in `conferences.csv`, and view them in the static dashboard (`index.html`).
 
+## Why This Project Exists
+
+Conference submission windows are easy to miss, and discovering relevant events often requires checking many disconnected sources. This project centralizes conference opportunities so speakers, trainers, and workshop leaders can plan submissions earlier and make travel decisions with better data.
+
+ConferenceTracker helps you:
+
+- Monitor upcoming conferences and avoid missing CFP/CfT/CfW deadlines
+- Compare events by date, location, and format to plan a realistic speaking calendar
+- Identify conferences that may provide travel or accommodation support
+- Discover international opportunities for community visibility and professional growth
+- Create data-backed requests for training, networking, and conference travel budgets
+
+In short, this repository turns conference discovery from an ad-hoc process into a repeatable workflow that supports both career development and team planning.
+
 ## Quick Copy Prompt
 
 ```text

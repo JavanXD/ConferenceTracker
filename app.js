@@ -59,7 +59,6 @@
       panelMap: document.getElementById("panelMap"),
       worldMap: document.getElementById("worldMap"),
       mapMeta: document.getElementById("mapMeta"),
-      mapLegend: document.getElementById("mapLegend"),
       mapControls: document.getElementById("mapControls")
     };
 
@@ -515,59 +514,6 @@
       return compact.replace(/\bDC\b/i, "D.C.");
     }
 
-    function continentFromTimezone(timezone) {
-      const tz = normalize(timezone);
-      if (!tz) return "Other";
-      const region = tz.split("/")[0];
-      if (region === "Europe") return "Europe";
-      if (region === "Asia") return "Asia";
-      if (region === "Africa") return "Africa";
-      if (region === "America") return "North America";
-      if (region === "Pacific" || region === "Australia") return "Oceania";
-      return "Other";
-    }
-
-    function getContinentForRow(row) {
-      const country = toLower(row.country);
-      const countryMap = {
-        uk: "Europe",
-        austria: "Europe",
-        belgium: "Europe",
-        poland: "Europe",
-        switzerland: "Europe",
-        france: "Europe",
-        germany: "Europe",
-        norway: "Europe",
-        portugal: "Europe",
-        netherlands: "Europe",
-        lithuania: "Europe",
-        luxembourg: "Europe",
-        romania: "Europe",
-        denmark: "Europe",
-        italy: "Europe",
-        greece: "Europe",
-        india: "Asia",
-        japan: "Asia",
-        singapore: "Asia",
-        israel: "Asia",
-        indonesia: "Asia",
-        uae: "Asia",
-        qatar: "Asia",
-        bahrain: "Asia",
-        "saudi arabia": "Asia",
-        usa: "North America",
-        canada: "North America",
-        mexico: "North America",
-        argentina: "South America",
-        brazil: "South America",
-        "south africa": "Africa",
-        kenya: "Africa",
-        australia: "Oceania"
-      };
-      if (countryMap[country]) return countryMap[country];
-      return continentFromTimezone(row.timezone);
-    }
-
     function buildConferenceMapPoints(rows) {
       const points = [];
       const seen = new Set();
@@ -577,7 +523,6 @@
         const country = normalize(row.country);
         if (!isMappable(country)) return;
 
-        const continent = getContinentForRow(row);
         const name = normalize(row.conference_name);
         if (!name) return;
 
@@ -596,7 +541,6 @@
             city,
             country,
             name,
-            continent,
             indexInCity
           });
         });
@@ -604,26 +548,11 @@
       return points;
     }
 
-    function markerColors(continent) {
-      const byContinent = {
-        Europe: { stroke: "#3d5cf4", fill: "#7c9bff" },
-        Asia: { stroke: "#b06d08", fill: "#ffc46b" },
-        "North America": { stroke: "#127a50", fill: "#38d39f" },
-        "South America": { stroke: "#7f28a8", fill: "#d28aff" },
-        Africa: { stroke: "#b03a3a", fill: "#ff8f8f" },
-        Oceania: { stroke: "#1f7ea8", fill: "#6fd9ff" },
-        Other: { stroke: "#666c80", fill: "#a7afc9" }
+    function markerColors() {
+      return {
+        stroke: "#29f5a5",
+        fill: "#00ff9c"
       };
-      return byContinent[continent] || byContinent.Other;
-    }
-
-    function renderMapLegend() {
-      if (!el.mapLegend) return;
-      const continents = ["Europe", "Asia", "North America", "South America", "Africa", "Oceania", "Other"];
-      el.mapLegend.innerHTML = continents.map((continent) => {
-        const dotClass = `legend-dot-${toLower(continent).replace(/\s+/g, "-")}`;
-        return `<span class="legend-item"><span class="legend-dot ${dotClass}"></span>${continent}</span>`;
-      }).join("");
     }
 
     function updateMapSourceButtons() {
@@ -675,9 +604,15 @@
 
     function initMapIfNeeded() {
       if (mapInstance || !el.worldMap || typeof L === "undefined") return;
-      mapInstance = L.map(el.worldMap, { worldCopyJump: true }).setView([18, 10], 2);
+      mapInstance = L.map(el.worldMap, {
+        worldCopyJump: true,
+        zoomControl: true,
+        preferCanvas: true
+      }).setView([18, 10], 2);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 7,
+        minZoom: 2,
+        opacity: 0.62,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(mapInstance);
       mapLayer = L.layerGroup().addTo(mapInstance);
@@ -687,7 +622,6 @@
       initMapIfNeeded();
       if (!mapLayer || !el.mapMeta) return;
 
-      renderMapLegend();
       const points = buildConferenceMapPoints(rows);
       el.mapMeta.textContent = `Geocoding ${points.length} conference point${points.length === 1 ? "" : "s"}...`;
 
@@ -715,21 +649,25 @@
         const ring = Math.floor(entry.indexInCity / 12);
         const latOffset = Math.sin(angle) * jitterRadius * (ring + 1);
         const lonOffset = Math.cos(angle) * jitterRadius * (ring + 1);
-        const colors = markerColors(entry.continent);
+        const colors = markerColors();
         const marker = L.circleMarker([point.lat + latOffset, point.lon + lonOffset], {
-          radius: 5,
+          radius: 5.5,
           color: colors.stroke,
           weight: 2,
           fillColor: colors.fill,
-          fillOpacity: 0.9
+          fillOpacity: 0.92
         });
-        marker.bindTooltip(escapeHtml(entry.name), {
-          permanent: true,
+        marker.bindTooltip(
+          `<div class="map-tooltip-title">${escapeHtml(entry.name)}</div><div class="map-tooltip-meta">${escapeHtml(entry.city)}, ${escapeHtml(entry.country)}</div>`,
+          {
+          permanent: false,
+          sticky: true,
           direction: "top",
           className: "map-tooltip"
-        });
+          }
+        );
         marker.bindPopup(
-          `<strong>${escapeHtml(entry.name)}</strong><br>${escapeHtml(entry.city)}, ${escapeHtml(entry.country)}<br>${escapeHtml(entry.continent)}`
+          `<div class="map-popup-title">${escapeHtml(entry.name)}</div><div class="map-popup-meta">${escapeHtml(entry.city)}, ${escapeHtml(entry.country)}</div>`
         );
         marker.addTo(mapLayer);
       }

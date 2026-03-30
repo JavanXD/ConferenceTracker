@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cybersecurity Conference Tracker | InfoSec, Hacking, CFP & CFT Deadlines</title>
+  <title>Conference Tracker & Map | InfoSec, Hacking, CFP & CFT Deadlines</title>
   <meta name="description" content="Track global cybersecurity, infosec, and hacking conferences with CFP/CFT/CFW deadlines, submission status, and location insights." />
   <meta name="keywords" content="cybersecurity conferences, infosec conferences, hacking conferences, CFP deadlines, CFT, CFW, security call for papers" />
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <meta name="author" content="Conference Tracker" />
   <meta name="theme-color" content="#050707" />
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" sizes="any" />
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="canonical" href="https://conference-tracker.javan.de/" />
 
@@ -63,6 +64,14 @@
       "license": "https://creativecommons.org/licenses/by/4.0/"
     }
   </script>
+  <!-- Leaflet before app styles so theme overrides Leaflet defaults (popups, tooltips, controls) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+    integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -219,18 +228,10 @@
         </div>
         <div id="worldMap" role="img" aria-label="World map with conference city markers"></div>
         <p class="map-meta" id="mapMeta">Preparing map...</p>
-        <div class="map-legend" id="mapLegend"></div>
       </section>
     </section>
   </main>
 
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
-    integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"
     integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ=="
