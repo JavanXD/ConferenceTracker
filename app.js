@@ -381,28 +381,32 @@
       }
       el.emptyState.hidden = true;
 
+      function td(label, value) {
+        return `<td data-label="${escapeHtml(label)}">${value}</td>`;
+      }
+
       el.dataTbody.innerHTML = rows.map((r) => `
         <tr>
-          <td>${ellipsisCell(r.conference_name)}</td>
-          <td>${escapeHtml(normalize(r.attendees_500_plus))}</td>
-          <td>${toPill(r.accepts_cfp)}</td>
-          <td>${toPill(r.accepts_cft)}</td>
-          <td>${toPill(r.accepts_cfw)}</td>
-          <td>${escapeHtml(normalize(r.academic_acceptance_level))}</td>
-          <td>${escapeHtml(normalize(r.cfp_deadline_month))}</td>
-          <td>${renderTrackBadges(r.submission_tracks)}</td>
-          <td>${escapeHtml(normalize(r.travel_accommodation_sponsorship))}</td>
-          <td>${renderDeadlineValue(r, "cfp_deadline", "accepts_cfp")}</td>
-          <td>${renderDeadlineValue(r, "cft_deadline", "accepts_cft")}</td>
-          <td>${renderDeadlineValue(r, "cfw_deadline", "accepts_cfw")}</td>
-          <td>${escapeHtml(normalize(r.conference_start_date))}</td>
-          <td>${escapeHtml(normalize(r.conference_end_date))}</td>
-          <td>${escapeHtml(normalize(r.city))}</td>
-          <td>${escapeHtml(normalize(r.country))}</td>
-          <td>${linkOrText(r.website_or_cfp_link)}</td>
-          <td>${linkOrText(r.cft_link)}</td>
-          <td>${linkOrText(r.cfw_link)}</td>
-          <td>${renderNextDeadline(r)}</td>
+          ${td("Name", ellipsisCell(r.conference_name))}
+          ${td("500+?", escapeHtml(normalize(r.attendees_500_plus)))}
+          ${td("CfP?", toPill(r.accepts_cfp))}
+          ${td("CfT?", toPill(r.accepts_cft))}
+          ${td("CfW?", toPill(r.accepts_cfw))}
+          ${td("Academic", escapeHtml(normalize(r.academic_acceptance_level)))}
+          ${td("CfP Month", escapeHtml(normalize(r.cfp_deadline_month)))}
+          ${td("Tracks", renderTrackBadges(r.submission_tracks))}
+          ${td("Sponsorship", escapeHtml(normalize(r.travel_accommodation_sponsorship)))}
+          ${td("CfP", renderDeadlineValue(r, "cfp_deadline", "accepts_cfp"))}
+          ${td("CfT", renderDeadlineValue(r, "cft_deadline", "accepts_cft"))}
+          ${td("CfW", renderDeadlineValue(r, "cfw_deadline", "accepts_cfw"))}
+          ${td("Start", escapeHtml(normalize(r.conference_start_date)))}
+          ${td("End", escapeHtml(normalize(r.conference_end_date)))}
+          ${td("City", escapeHtml(normalize(r.city)))}
+          ${td("Country", escapeHtml(normalize(r.country)))}
+          ${td("Website/CfP", linkOrText(r.website_or_cfp_link))}
+          ${td("CfT Link", linkOrText(r.cft_link))}
+          ${td("CfW Link", linkOrText(r.cfw_link))}
+          ${td("Next Deadline", renderNextDeadline(r))}
         </tr>
       `).join("");
     }
