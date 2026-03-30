@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Replace example.com with your production domain before deploy.
-Sitemap: https://example.com/sitemap.xml
+Sitemap: https://conference-tracker.javan.de/sitemap.xml
