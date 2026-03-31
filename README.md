@@ -123,7 +123,6 @@ Execution rules:
    c) official organizer social
    d) aggregator only as lead, must verify with official source
 3) Use strict field formats:
-   - `priority_level`: High|Medium|Low
    - `attendees_500_plus`: Yes|No|Unknown
    - `academic_acceptance_level`: Academic|Industry|Mixed|Unknown
    - `accepts_cfp` / `accepts_cft` / `accepts_cfw`: Yes|No|Unknown
@@ -160,3 +159,22 @@ python3 -m http.server 8000
 ```
 
 Open [http://localhost:8000/index.html](http://localhost:8000/index.html).
+
+## Data Verification Pipeline
+
+Use `pipeline_verify_enrich.py` to validate every row, test links, discover likely CFP/CfT/CfW URLs from official pages, and generate a report.
+
+```bash
+# Dry run (no CSV changes)
+python3 pipeline_verify_enrich.py
+
+# Apply safe fixes directly to conferences.csv
+python3 pipeline_verify_enrich.py --apply
+```
+
+Output report:
+- `reports/verification-YYYY-MM-DD.md`
+
+Notes:
+- The pipeline is conservative and does not invent dates or enum values.
+- It updates fields only when there is clear link/track evidence and leaves uncertain values as `TBD`/`Unknown`.

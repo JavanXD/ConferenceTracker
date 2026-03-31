@@ -1,6 +1,6 @@
     const CSV_PATH = "conferences.csv";
     const STORAGE_KEY = "conference_dashboard_filters_v1";
-    const GEO_CACHE_KEY = "conference_dashboard_geo_cache_v2";
+    const GEO_CACHE_KEY = "conference_dashboard_geo_cache_v3";
     const UI_PREFS_KEY = "conference_dashboard_ui_prefs_v1";
 
     function defaultFilters() {
@@ -340,6 +340,73 @@
       }).join("")}</span>`;
     }
 
+    function renderAcceptanceLevelCell(value) {
+      const raw = normalize(value);
+      const v = toLower(raw);
+      if (v === "industry") {
+        return `<span class="acceptance-emoji" title="Industry" aria-label="Industry">👷</span>`;
+      }
+      if (v === "academic") {
+        return `<span class="acceptance-emoji" title="Academic" aria-label="Academic">🧑‍🎓</span>`;
+      }
+      if (v === "mixed") {
+        return `<span class="acceptance-emoji" title="Mixed (industry and academic)" aria-label="Mixed">👷🧑‍🎓</span>`;
+      }
+      return escapeHtml(raw || "—");
+    }
+
+    const countryToIso2 = {
+      Argentina: "AR",
+      Australia: "AU",
+      Austria: "AT",
+      Bahrain: "BH",
+      Belgium: "BE",
+      Brazil: "BR",
+      Canada: "CA",
+      Denmark: "DK",
+      France: "FR",
+      Germany: "DE",
+      Greece: "GR",
+      India: "IN",
+      Indonesia: "ID",
+      Israel: "IL",
+      Italy: "IT",
+      Japan: "JP",
+      Kenya: "KE",
+      Lithuania: "LT",
+      Luxembourg: "LU",
+      Mexico: "MX",
+      Nepal: "NP",
+      Netherlands: "NL",
+      Norway: "NO",
+      Poland: "PL",
+      Portugal: "PT",
+      Qatar: "QA",
+      Romania: "RO",
+      "Saudi Arabia": "SA",
+      Singapore: "SG",
+      "South Africa": "ZA",
+      Spain: "ES",
+      Switzerland: "CH",
+      "United Arab Emirates": "AE",
+      "United Kingdom": "GB",
+      "United States": "US"
+    };
+
+    function iso2ToFlagEmoji(iso2) {
+      return iso2
+        .toUpperCase()
+        .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+    }
+
+    function renderCountryFlag(countryValue) {
+      const country = normalize(countryValue);
+      if (!country || country === "TBD" || country === "Various") return "—";
+      const iso2 = countryToIso2[country];
+      if (!iso2) return escapeHtml(country);
+      return `<span class="country-flag" title="${escapeHtml(country)}" aria-label="${escapeHtml(country)}">${iso2ToFlagEmoji(iso2)}</span>`;
+    }
+
     function renderSummary(filteredRows, allRows) {
       const total = allRows.length;
       const shown = filteredRows.length;
@@ -380,8 +447,9 @@
       }
       el.emptyState.hidden = true;
 
-      function td(label, value) {
-        return `<td data-label="${escapeHtml(label)}">${value}</td>`;
+      function td(label, value, className) {
+        const cls = className ? ` class="${escapeHtml(className)}"` : "";
+        return `<td data-label="${escapeHtml(label)}"${cls}>${value}</td>`;
       }
 
       el.dataTbody.innerHTML = rows.map((r) => `
@@ -391,17 +459,17 @@
           ${td("CfP?", toPill(r.accepts_cfp))}
           ${td("CfT?", toPill(r.accepts_cft))}
           ${td("CfW?", toPill(r.accepts_cfw))}
-          ${td("Academic", escapeHtml(normalize(r.academic_acceptance_level)))}
+          ${td("Academic", renderAcceptanceLevelCell(r.academic_acceptance_level), "acceptance-col")}
           ${td("CfP Month", escapeHtml(normalize(r.cfp_deadline_month)))}
           ${td("Tracks", renderTrackBadges(r.submission_tracks))}
-          ${td("Sponsorship", escapeHtml(normalize(r.travel_accommodation_sponsorship)))}
+          ${td("Sponsorship", sponsorshipPill(r.travel_accommodation_sponsorship))}
           ${td("CfP", renderDeadlineValue(r, "cfp_deadline", "accepts_cfp"))}
           ${td("CfT", renderDeadlineValue(r, "cft_deadline", "accepts_cft"))}
           ${td("CfW", renderDeadlineValue(r, "cfw_deadline", "accepts_cfw"))}
           ${td("Start", escapeHtml(normalize(r.conference_start_date)))}
           ${td("End", escapeHtml(normalize(r.conference_end_date)))}
           ${td("City", escapeHtml(normalize(r.city)))}
-          ${td("Country", escapeHtml(normalize(r.country)))}
+          ${td("Country", renderCountryFlag(r.country), "country-col")}
           ${td("Website/CfP", linkOrText(r.website_or_cfp_link))}
           ${td("CfT Link", linkOrText(r.cft_link))}
           ${td("CfW Link", linkOrText(r.cfw_link))}
@@ -470,6 +538,22 @@
       if (v === "yes") return `<span class="pill pill-yes">Yes</span>`;
       if (v === "no") return `<span class="pill pill-no">No</span>`;
       return `<span class="pill pill-unknown">${escapeHtml(normalize(value) || "Unknown")}</span>`;
+    }
+
+    function sponsorshipPill(value) {
+      const raw = normalize(value);
+      const v = toLower(raw);
+      if (v === "yes") {
+        return `<span class="pill pill-yes" title="Travel or accommodation sponsorship offered">Yes</span>`;
+      }
+      if (v === "no") {
+        return `<span class="pill pill-no" title="No travel or accommodation sponsorship">No</span>`;
+      }
+      if (v === "partial") {
+        return `<span class="pill pill-gray" title="Partial travel or accommodation support">Partial</span>`;
+      }
+      const label = raw || "Unknown";
+      return `<span class="pill pill-gray" title="Sponsorship status not verified">${escapeHtml(label)}</span>`;
     }
 
     function parseCities(cityValue) {
@@ -550,9 +634,21 @@
 
     function markerColors() {
       return {
-        stroke: "#29f5a5",
+        stroke: "#d9ffe8",
         fill: "#00ff9c"
       };
+    }
+
+    function markerRadiusForPoint(entry) {
+      const tiers = [3.1, 3.8, 4.6, 5.3];
+      const stableSeed = `${entry.locationKey}|${entry.name}`;
+      let hash = 0;
+      for (let i = 0; i < stableSeed.length; i += 1) {
+        hash = ((hash << 5) - hash) + stableSeed.charCodeAt(i);
+        hash |= 0;
+      }
+      const idx = Math.abs(hash + entry.indexInCity) % tiers.length;
+      return tiers[idx];
     }
 
     function updateMapSourceButtons() {
@@ -650,12 +746,13 @@
         const latOffset = Math.sin(angle) * jitterRadius * (ring + 1);
         const lonOffset = Math.cos(angle) * jitterRadius * (ring + 1);
         const colors = markerColors();
+        const radius = markerRadiusForPoint(entry);
         const marker = L.circleMarker([point.lat + latOffset, point.lon + lonOffset], {
-          radius: 5.5,
+          radius,
           color: colors.stroke,
-          weight: 2,
+          weight: 1.6,
           fillColor: colors.fill,
-          fillOpacity: 0.92
+          fillOpacity: 0.88
         });
         marker.bindTooltip(
           `<div class="map-tooltip-title">${escapeHtml(entry.name)}</div><div class="map-tooltip-meta">${escapeHtml(entry.city)}, ${escapeHtml(entry.country)}</div>`,

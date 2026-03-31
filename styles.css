@@ -27,7 +27,7 @@ body {
     linear-gradient(180deg, #040606 0%, #050707 100%);
   color: var(--text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 body::before {
   content: "";
@@ -52,11 +52,11 @@ body::before {
 
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
   margin-inline: 0;
-  padding: 24px;
+  padding: 14px 16px;
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 @media (max-width: 900px) {
   .container {
@@ -66,6 +66,109 @@ body::before {
 @media (max-width: 520px) {
   .container {
     padding: 12px;
+  }
+}
+
+/* Laptop/tablet optimization: keep layout compact above phone widths. */
+@media (min-width: 651px) and (max-width: 1700px) {
+  .container {
+    max-width: 100%;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .filters {
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 10px;
+  }
+
+  .summary {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  #dataTable {
+    table-layout: fixed;
+    min-width: 0;
+  }
+
+  #dataTable th,
+  #dataTable td {
+    padding: 7px 8px;
+    font-size: 0.78rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  #dataTable th:first-child,
+  #dataTable td:first-child {
+    max-width: 11rem;
+  }
+
+  #dataTable .cell-ellipsis {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+/* Smaller laptops: extra compact to avoid oversized feel on 13-14 inch screens */
+@media (min-width: 901px) and (max-width: 1700px) {
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  .meta {
+    font-size: 0.84rem;
+  }
+
+  .summary {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .metric {
+    padding: 12px;
+  }
+
+  .metric .value {
+    font-size: 1.2rem;
+  }
+
+  #worldMap {
+    height: min(60vh, 560px);
+  }
+
+  .filters {
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  }
+
+  button,
+  .tab-btn,
+  .field select,
+  .field input {
+    padding: 7px 10px;
+    font-size: 0.84rem;
+  }
+
+  th,
+  td {
+    font-size: 0.8rem;
   }
 }
 .skip-link {
@@ -227,7 +330,8 @@ button:hover {
 }
 
 .table-wrap {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--border);
   border-radius: 12px;
   max-width: 100%;
@@ -237,14 +341,9 @@ button:hover {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1800px;
-  table-layout: fixed;
+  min-width: 100%;
+  table-layout: auto;
   background: #0c1410;
-}
-@media (max-width: 640px) {
-  table {
-    min-width: 1100px;
-  }
 }
 
 th, td {
@@ -289,6 +388,22 @@ th {
   color: var(--accent-2);
 }
 
+#dataTable th.acceptance-col-th,
+#dataTable td.acceptance-col {
+  text-align: center;
+}
+
+#dataTable td.acceptance-col {
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+#dataTable td.country-col {
+  text-align: center;
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+
 tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.01); }
 tr:hover td { background: rgba(0, 255, 156, 0.08); }
 a { color: var(--accent); }
@@ -298,12 +413,15 @@ a { color: var(--accent); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 680px;
+  max-width: 100%;
 }
 
-th:first-child,
-td:first-child {
-  width: 360px;
+/* Name column: cap width so the table fits laptop viewports; ellipsis uses full cell width */
+#dataTable th:first-child,
+#dataTable td:first-child {
+  min-width: 0;
+  max-width: min(28vw, 15rem);
+  width: auto;
 }
 
 @media (max-width: 900px) {
@@ -313,13 +431,9 @@ td:first-child {
     font-size: 0.82rem;
   }
 
-  th:first-child,
-  td:first-child {
-    width: 260px;
-  }
-
-  .cell-ellipsis {
-    max-width: 360px;
+  #dataTable th:first-child,
+  #dataTable td:first-child {
+    max-width: min(40vw, 13rem);
   }
 }
 
@@ -487,6 +601,7 @@ td:first-child {
 }
 .pill-yes { border-color: #2e7d5f; color: #7ff0bd; }
 .pill-no { border-color: #7d2e40; color: #ff9eb3; }
+.pill-gray { border-color: #5a6369; color: #b8c2c9; }
 .pill-unknown { border-color: #7b6a2a; color: #ffd98f; }
 .pill-na { border-color: #49616a; color: #b9cbd1; }
 .pill-deadline-soon { border-color: #934b23; color: #ffb889; }
@@ -523,10 +638,26 @@ td:first-child {
   margin-right: 4px;
 }
 .hidden { display: none; }
+.tab-nav-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin: 12px 0;
+  max-width: 100%;
+}
+.tab-nav-bar .tab-nav {
+  margin: 0;
+}
+.tab-nav-actions {
+  flex-shrink: 0;
+}
 .tab-nav {
   display: flex;
   gap: 8px;
-  margin: 12px 0;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 .tab-btn {
   border: 1px solid var(--border);
@@ -678,6 +809,28 @@ td:first-child {
 }
 .leaflet-container .leaflet-control-attribution a:hover {
   color: #9dffdb;
+}
+
+/* Scoped to map: beat Leaflet defaults (white popups/tooltips) if load order or specificity differs */
+#worldMap .leaflet-popup-content-wrapper,
+#worldMap .leaflet-popup-tip {
+  background: #0a1510 !important;
+  color: #fafffe !important;
+  border-color: #3dffc4 !important;
+}
+#worldMap .leaflet-popup-content {
+  color: #fafffe !important;
+}
+#worldMap .leaflet-tooltip,
+#worldMap .leaflet-tooltip.map-tooltip {
+  background: rgba(4, 10, 7, 0.98) !important;
+  background-color: rgba(4, 10, 7, 0.98) !important;
+  color: #f2fff8 !important;
+  border: 1px solid #2aaf7a !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(0, 255, 156, 0.18);
+}
+#worldMap .leaflet-tooltip.map-tooltip .map-tooltip-meta {
+  color: #d8fff0;
 }
 
 .app-error {

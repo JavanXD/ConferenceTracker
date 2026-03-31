@@ -1,0 +1,392 @@
+# Conference Data Verification Report
+
+- Generated: 2026-03-30T23:21:02
+- Rows with changes: 53
+- Rows with warnings: 93
+- Rows with errors: 0
+
+## Auto-updated Rows
+- Black Hat Asia Briefings (row 8)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+  - cft_link: empty -> https://blackhat.com/asia-26/training/schedule/index.html
+- NDC Toronto (row 10)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Code Blue Tokyo (row 20)
+  - cfw_link: empty -> https://codeblue.jp/en/cfp/contests-workshops/
+- LASCON (row 23)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Swiss Cyber Storm (row 25)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- OWASP IL Conference (row 28)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Out of The Box Jakarta (row 29)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- BSI Deutscher IT-Sicherheitskongress (row 31)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- GrrCon (row 32)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Oh My Hack Warsaw (row 34)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- RooCon Sydney (row 36)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- CyberWiseCon Vilnius (row 37)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- FIRST Conference (row 38)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- GISEC Global (row 39)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- BlueCon Japan (row 40)
+  - accepts_cft: Unknown -> Yes (link evidence)
+- OrangeCon (row 41)
+  - accepts_cft: Unknown -> Yes (link evidence)
+- TenguCon Japan (row 43)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- ISC2 Security Congress (row 44)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Ethiack (row 45)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- HackAIcon (row 46)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Hexacon Paris (row 47)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- THOTCON (row 49)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Web Summit Qatar (row 52)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- FIRSTCON Copenhagen (row 54)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- WeAreDevelopers World Congress (row 56)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- World Conference on Cyber Security and Ethical Hacking (row 70)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Cybertech Global Tel Aviv (row 71)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Qatar Information Security Conference (row 78)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Africa Cyber Defense Summit (row 80)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- Cyber Week Tel Aviv (row 81)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- CSCML (row 82)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- ACM CCS (row 84)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- USENIX Security (row 85)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- IEEE Symposium on Security and Privacy (row 86)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- NDSS Symposium (row 87)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- ACM AsiaCCS (row 88)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- RAID (row 89)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- ESORICS (row 90)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- ACM IMC (row 92)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- DIMVA (row 93)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- PAM (row 94)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- ACM CoNEXT (row 95)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- IEEE CSF (row 96)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- POPL (row 97)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- PLDI (row 98)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- USENIX WOOT (row 99)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- USENIX HotSec (row 100)
+  - cft_deadline_MM-DD: empty -> TBD
+  - cfw_deadline_MM-DD: empty -> TBD
+- German OWASP Day (row 102)
+  - accepts_cft: Unknown -> Yes (link evidence)
+  - accepts_cfw: Unknown -> Yes (link evidence)
+- OWASP Global AppSec Washington DC (row 103)
+  - accepts_cfw: Unknown -> Yes (link evidence)
+- BSidesLV (row 107)
+  - accepts_cft: Unknown -> Yes (link evidence)
+  - accepts_cfw: Unknown -> Yes (link evidence)
+- OWASP Global AppSec EU Barcelona (row 108)
+  - accepts_cft: Unknown -> Yes (link evidence)
+  - accepts_cfw: Unknown -> Yes (link evidence)
+- OWASP Global AppSec San Francisco (row 114)
+  - accepts_cft: Unknown -> Yes (link evidence)
+  - accepts_cfw: Unknown -> Yes (link evidence)
+- Ekoparty (row 115)
+  - accepts_cft: Unknown -> Yes (link evidence)
+  - accepts_cfw: Unknown -> Yes (link evidence)
+
+## Warnings and Errors
+- Black Hat Asia Briefings (row 8)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+- DefCamp Cluj/Bucharest (row 19)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Code Blue Tokyo (row 20)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- DevOpsDays Salt Lake City (row 21)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Techorama Belgium (row 24)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Hack in Paris (row 26)
+  - WARNING: website_or_cfp_link unreachable
+  - WARNING: accepts_cft=No but discovered potential link evidence
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Out of The Box Jakarta (row 29)
+  - WARNING: link verification skipped (fetch limit reached)
+- AppSecDays Portugal (row 30)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+- BSI Deutscher IT-Sicherheitskongress (row 31)
+  - WARNING: link verification skipped (fetch limit reached)
+- GrrCon (row 32)
+  - WARNING: link verification skipped (fetch limit reached)
+- Techorama Netherlands (row 33)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Oh My Hack Warsaw (row 34)
+  - WARNING: link verification skipped (fetch limit reached)
+- Nullcon Goa (row 35)
+  - WARNING: link verification skipped (fetch limit reached)
+- RooCon Sydney (row 36)
+  - WARNING: link verification skipped (fetch limit reached)
+- CyberWiseCon Vilnius (row 37)
+  - WARNING: link verification skipped (fetch limit reached)
+- FIRST Conference (row 38)
+  - WARNING: link verification skipped (fetch limit reached)
+- GISEC Global (row 39)
+  - WARNING: link verification skipped (fetch limit reached)
+- BlueCon Japan (row 40)
+  - WARNING: link verification skipped (fetch limit reached)
+- OrangeCon (row 41)
+  - WARNING: link verification skipped (fetch limit reached)
+- DEF CON Bahrain (row 42)
+  - WARNING: link verification skipped (fetch limit reached)
+- TenguCon Japan (row 43)
+  - WARNING: link verification skipped (fetch limit reached)
+- ISC2 Security Congress (row 44)
+  - WARNING: link verification skipped (fetch limit reached)
+- Ethiack (row 45)
+  - WARNING: link verification skipped (fetch limit reached)
+- HackAIcon (row 46)
+  - WARNING: link verification skipped (fetch limit reached)
+- Hexacon Paris (row 47)
+  - WARNING: link verification skipped (fetch limit reached)
+- Code Europe Krakow (row 48)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- THOTCON (row 49)
+  - WARNING: link verification skipped (fetch limit reached)
+- RVAsec (row 50)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- SecAppDev Leuven (row 51)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+- Web Summit Qatar (row 52)
+  - WARNING: link verification skipped (fetch limit reached)
+- RSAC USA (row 53)
+  - WARNING: link verification skipped (fetch limit reached)
+- FIRSTCON Copenhagen (row 54)
+  - WARNING: link verification skipped (fetch limit reached)
+- NDC Oslo (row 55)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- WeAreDevelopers World Congress (row 56)
+  - WARNING: link verification skipped (fetch limit reached)
+- QCon London (row 57)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- SmashingConf New York (row 58)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- DeveloperWeek (row 59)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Visual Studio Live! VSLive! (row 60)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- BruCON Conference (row 61)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Hack.lu (row 62)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- BSides London (row 63)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- BSides Munich (row 64)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- OWASP AppSec Europe (row 65)
+  - WARNING: link verification skipped (fetch limit reached)
+- SECCON (row 66)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- CODE BLUE (row 67)
+  - WARNING: link verification skipped (fetch limit reached)
+- Security Camp Japan (row 68)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- APAC DFIR Summit and Cyber Security Training (row 69)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+- World Conference on Cyber Security and Ethical Hacking (row 70)
+  - WARNING: link verification skipped (fetch limit reached)
+- Cybertech Global Tel Aviv (row 71)
+  - WARNING: link verification skipped (fetch limit reached)
+- H2HC (row 72)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Ekoparty Security Conference (row 73)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- BSides Cape Town (row 74)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Nullcon (row 75)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Africahackon (row 76)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- GISEC (row 77)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- Qatar Information Security Conference (row 78)
+  - WARNING: link verification skipped (fetch limit reached)
+- Middle East Security Conference and Exhibition (row 79)
+  - WARNING: link verification skipped (fetch limit reached)
+- Africa Cyber Defense Summit (row 80)
+  - WARNING: link verification skipped (fetch limit reached)
+- Cyber Week Tel Aviv (row 81)
+  - WARNING: link verification skipped (fetch limit reached)
+- CSCML (row 82)
+  - WARNING: link verification skipped (fetch limit reached)
+- CanSecWest (row 83)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- ACM CCS (row 84)
+  - WARNING: link verification skipped (fetch limit reached)
+- USENIX Security (row 85)
+  - WARNING: link verification skipped (fetch limit reached)
+- IEEE Symposium on Security and Privacy (row 86)
+  - WARNING: link verification skipped (fetch limit reached)
+- NDSS Symposium (row 87)
+  - WARNING: link verification skipped (fetch limit reached)
+- ACM AsiaCCS (row 88)
+  - WARNING: link verification skipped (fetch limit reached)
+- RAID (row 89)
+  - WARNING: link verification skipped (fetch limit reached)
+- ESORICS (row 90)
+  - WARNING: link verification skipped (fetch limit reached)
+- The Web Conference (row 91)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- ACM IMC (row 92)
+  - WARNING: link verification skipped (fetch limit reached)
+- DIMVA (row 93)
+  - WARNING: link verification skipped (fetch limit reached)
+- PAM (row 94)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfp=No but discovered potential link evidence
+- ACM CoNEXT (row 95)
+  - WARNING: link verification skipped (fetch limit reached)
+- IEEE CSF (row 96)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfp=No but discovered potential link evidence
+- POPL (row 97)
+  - WARNING: link verification skipped (fetch limit reached)
+- PLDI (row 98)
+  - WARNING: link verification skipped (fetch limit reached)
+- USENIX WOOT (row 99)
+  - WARNING: link verification skipped (fetch limit reached)
+- USENIX HotSec (row 100)
+  - WARNING: link verification skipped (fetch limit reached)
+- W2SP (row 101)
+  - WARNING: link verification skipped (fetch limit reached)
+- German OWASP Day (row 102)
+  - WARNING: link verification skipped (fetch limit reached)
+- OWASP Global AppSec Washington DC (row 103)
+  - WARNING: link verification skipped (fetch limit reached)
+- OWASP Frankfurt (row 104)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- AppSec Days Singapore (row 105)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- DEF CON (row 106)
+  - WARNING: link verification skipped (fetch limit reached)
+- BSidesLV (row 107)
+  - WARNING: link verification skipped (fetch limit reached)
+- OWASP Global AppSec EU Barcelona (row 108)
+  - WARNING: link verification skipped (fetch limit reached)
+- NDC Security (row 109)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cft=No but discovered potential link evidence
+- SecTor (row 110)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- ThreatCon (row 111)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- BSides Canberra (row 112)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- CyberCon Melbourne (row 113)
+  - WARNING: link verification skipped (fetch limit reached)
+  - WARNING: accepts_cfw=No but discovered potential link evidence
+- OWASP Global AppSec San Francisco (row 114)
+  - WARNING: link verification skipped (fetch limit reached)
+- Ekoparty (row 115)
+  - WARNING: link verification skipped (fetch limit reached)

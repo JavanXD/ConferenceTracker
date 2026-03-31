@@ -99,19 +99,20 @@
             </svg>
             <span>GitHub Repo</span>
           </a>
-          <a href="./CONTRIBUTING.md">How to contribute data fixes</a>
         </div>
-      </div>
-      <div class="actions">
-        <button id="resetBtn" aria-keyshortcuts="Alt+0" title="Clear all filters and sorting (Alt+0)">Reset All Filters</button>
-        <button id="shortcutsBtn" aria-expanded="false" aria-controls="shortcutHelp" aria-keyshortcuts="Alt+K" title="Toggle keyboard shortcuts (Alt+K)">Shortcuts</button>
       </div>
     </section>
 
-    <nav class="tab-nav" aria-label="Dashboard tabs">
-      <button type="button" class="tab-btn active" id="tabDashboard" data-tab="dashboard" aria-controls="panelDashboard" aria-selected="true">Dashboard</button>
-      <button type="button" class="tab-btn" id="tabMap" data-tab="map" aria-controls="panelMap" aria-selected="false">Cyber Map</button>
-    </nav>
+    <div class="tab-nav-bar">
+      <div class="tab-nav-actions actions" role="toolbar" aria-label="Filters and help">
+        <button id="resetBtn" type="button" aria-keyshortcuts="Alt+0" title="Clear all filters and sorting (Alt+0)">Reset All Filters</button>
+        <button id="shortcutsBtn" type="button" aria-expanded="false" aria-controls="shortcutHelp" aria-keyshortcuts="Alt+K" title="Toggle keyboard shortcuts (Alt+K)">Shortcuts</button>
+      </div>
+      <nav class="tab-nav" aria-label="Dashboard tabs">
+        <button type="button" class="tab-btn active" id="tabDashboard" data-tab="dashboard" aria-controls="panelDashboard" aria-selected="true">Dashboard</button>
+        <button type="button" class="tab-btn" id="tabMap" data-tab="map" aria-controls="panelMap" aria-selected="false">Cyber Map</button>
+      </nav>
+    </div>
 
     <section class="tab-panel" id="panelDashboard">
       <section class="card" aria-labelledby="filtersHeading">
@@ -195,21 +196,21 @@
                 <th data-filter-key="acceptsCfp" class="clickable-th">CfP?</th>
                 <th data-filter-key="acceptsCft" class="clickable-th">CfT?</th>
                 <th data-filter-key="acceptsCfw" class="clickable-th">CfW?</th>
-                <th data-sort-key="academic_acceptance_level" class="clickable-th">Academic</th>
-                <th data-sort-key="cfp_deadline_month" class="clickable-th">CfP Month</th>
+                <th data-sort-key="academic_acceptance_level" class="clickable-th acceptance-col-th" title="Industry, academic, or mixed audience">Acad</th>
+                <th data-sort-key="cfp_deadline_month" class="clickable-th">Month</th>
                 <th>Tracks</th>
-                <th>Sponsorship</th>
+                <th>Sponsor</th>
                 <th>CfP</th>
                 <th>CfT</th>
                 <th>CfW</th>
                 <th data-sort-key="conference_start_date" class="clickable-th">Start</th>
                 <th data-sort-key="conference_end_date" class="clickable-th">End</th>
                 <th data-sort-key="city" class="clickable-th">City</th>
-                <th data-sort-key="country" class="clickable-th">Country</th>
-                <th>Website/CfP</th>
-                <th>CfT Link</th>
-                <th>CfW Link</th>
-                <th>Next Deadline</th>
+                <th data-sort-key="country" class="clickable-th" title="Country flag">Flag</th>
+                <th>Site</th>
+                <th>T Link</th>
+                <th>W Link</th>
+                <th>Next Due</th>
               </tr>
             </thead>
             <tbody></tbody>
