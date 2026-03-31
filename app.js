@@ -90,6 +90,42 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.filters));
     }
 
+    function normalizeUrlFilterValue(value) {
+      const clean = normalize(value);
+      if (!clean) return "";
+      if (clean === "All") return "";
+      return clean;
+    }
+
+    function readFiltersFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.toString()) return;
+      const urlFilters = defaultFilters();
+      let hasAny = false;
+      Object.keys(urlFilters).forEach((key) => {
+        if (!params.has(key)) return;
+        urlFilters[key] = normalizeUrlFilterValue(params.get(key));
+        hasAny = true;
+      });
+      if (!hasAny) return;
+      state.filters = { ...state.filters, ...urlFilters };
+    }
+
+    function syncFiltersToUrl() {
+      const params = new URLSearchParams(window.location.search);
+      Object.entries(state.filters).forEach(([key, value]) => {
+        const normalized = normalize(value);
+        if (!normalized || (key === "sortBy" && normalized === "attendees_name")) {
+          params.delete(key);
+          return;
+        }
+        params.set(key, normalized);
+      });
+      const query = params.toString();
+      const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState(null, "", nextUrl);
+    }
+
     function saveUiPrefs() {
       const prefs = {
         activeTab: state.activeTab,
@@ -1049,6 +1085,7 @@
     function rerender() {
       readFilterValues();
       saveFilters();
+      syncFiltersToUrl();
 
       const filtered = getFilteredRows();
       const sortedFiltered = sortRows(filtered);
@@ -1166,6 +1203,7 @@
     async function start() {
       state.geocodeCache = loadGeocodeCache();
       loadFilters();
+      readFiltersFromUrl();
       loadUiPrefs();
       bindEvents();
       setActiveTab(state.activeTab);
