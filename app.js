@@ -634,12 +634,30 @@
       return compact.replace(/\bDC\b/i, "D.C.");
     }
 
+    function isVirtualConference(row) {
+      const conferenceType = toLower(row?.conference_type);
+      const city = toLower(row?.city);
+      return conferenceType === "virtual" || city === "virtual" || city === "online";
+    }
+
+    function getVirtualLocationPoint(cityValue, countryValue) {
+      const city = toLower(cityValue);
+      const country = toLower(countryValue);
+      const isVirtualCity = city === "virtual" || city === "online";
+      if (!isVirtualCity) return null;
+      if (country === "global" || country === "worldwide" || country === "international") {
+        return { lat: 20, lon: 0, precision: "virtual_global" };
+      }
+      return null;
+    }
+
     function buildConferenceMapPoints(rows) {
       const points = [];
       const seen = new Set();
       const cityBuckets = new Map();
 
       rows.forEach((row) => {
+        if (isVirtualConference(row)) return;
         const country = normalize(row.country);
         if (!isMappable(country)) return;
 
@@ -700,6 +718,13 @@
 
     async function geocodeLocation(location) {
       const cacheKey = location.key;
+
+      const virtualPoint = getVirtualLocationPoint(location.city, location.country);
+      if (virtualPoint) {
+        state.geocodeCache[cacheKey] = virtualPoint;
+        saveGeocodeCache();
+        return virtualPoint;
+      }
       if (state.geocodeCache[cacheKey]) return state.geocodeCache[cacheKey];
 
       const city = normalizeCityName(location.city);
