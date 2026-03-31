@@ -2,6 +2,10 @@
 
 Track cybersecurity, infosec, and hacking speaking opportunities in `conferences.csv`, and view them in the static dashboard (`index.html`).
 
+## Screenshot
+
+![Conference Tracker dashboard screenshot](screenshots/app-screenshot.png)
+
 ## Why This Project Exists
 
 Conference submission windows are easy to miss, and discovering relevant events often requires checking many disconnected sources. This project centralizes conference opportunities so speakers, trainers, and workshop leaders can plan submissions earlier and make travel decisions with better data.
