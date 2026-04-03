@@ -47,8 +47,6 @@
       sortFilter: document.getElementById("sortFilter"),
       activeFilterMeta: document.getElementById("activeFilterMeta"),
       activeFilterChips: document.getElementById("activeFilterChips"),
-      shortcutsBtn: document.getElementById("shortcutsBtn"),
-      shortcutHelp: document.getElementById("shortcutHelp"),
       summaryCards: document.getElementById("summaryCards"),
       dataThead: document.querySelector("#dataTable thead"),
       dataTbody: document.querySelector("#dataTable tbody"),
@@ -1190,12 +1188,6 @@
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("input", rerender));
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("change", rerender));
       if (el.resetBtn) el.resetBtn.addEventListener("click", resetFilters);
-      if (el.shortcutsBtn && el.shortcutHelp) {
-        el.shortcutsBtn.addEventListener("click", () => {
-          const isHidden = el.shortcutHelp.classList.toggle("hidden");
-          el.shortcutsBtn.setAttribute("aria-expanded", String(!isHidden));
-        });
-      }
       if (el.summaryCards) el.summaryCards.addEventListener("click", (event) => {
         const btn = event.target.closest("[data-stat-action]");
         if (!btn) return;
@@ -1241,9 +1233,6 @@
         } else if (key === "0") {
           event.preventDefault();
           resetFilters();
-        } else if (key === "k") {
-          event.preventDefault();
-          el.shortcutsBtn?.click();
         }
       });
     }

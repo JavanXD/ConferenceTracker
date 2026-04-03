@@ -108,9 +108,8 @@
         <button type="button" class="tab-btn active" id="tabDashboard" data-tab="dashboard" aria-controls="panelDashboard" aria-selected="true">Dashboard</button>
         <button type="button" class="tab-btn" id="tabMap" data-tab="map" aria-controls="panelMap" aria-selected="false">Cyber Map</button>
       </nav>
-      <div class="tab-nav-actions actions" role="toolbar" aria-label="Filters and help">
+      <div class="tab-nav-actions actions" role="toolbar" aria-label="Filter actions">
         <button id="resetBtn" type="button" aria-keyshortcuts="Alt+0" title="Clear all filters and sorting (Alt+0)">Reset All Filters</button>
-        <button id="shortcutsBtn" type="button" aria-expanded="false" aria-controls="shortcutHelp" aria-keyshortcuts="Alt+K" title="Toggle keyboard shortcuts (Alt+K)">Shortcuts</button>
       </div>
     </div>
 
@@ -170,12 +169,6 @@
       </div>
       <p class="meta" id="activeFilterMeta" role="status" aria-live="polite">No filters active</p>
       <div class="chips" id="activeFilterChips"></div>
-      <div class="shortcut-help hidden" id="shortcutHelp">
-        <strong>Keyboard shortcuts:</strong>
-        <span><kbd>Alt</kbd>+<kbd>F</kbd> focus search, </span>
-        <span><kbd>Alt</kbd>+<kbd>0</kbd> reset filters, </span>
-        <span><kbd>Alt</kbd>+<kbd>K</kbd> toggle this help.</span>
-      </div>
       <div class="contrib-note">
         <strong>Found missing or wrong data?</strong>
         <a href="https://github.com/JavanXD/ConferenceTracker/fork" target="_blank" rel="noopener noreferrer">Fork the repo</a>, update <code>conferences.csv</code>, and open a PR with changed conference names and source links.
