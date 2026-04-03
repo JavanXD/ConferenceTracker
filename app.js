@@ -10,6 +10,7 @@
         acceptsCfp: "",
         acceptsCft: "",
         acceptsCfw: "",
+        cftOrCfw: "",
         academicLevel: "",
         sponsorship: "",
         conferenceType: "",
@@ -448,8 +449,12 @@
       const shown = filteredRows.length;
       const largeEvents = filteredRows.filter((r) => toLower(r.attendees_500_plus) === "yes").length;
       const openCfp = filteredRows.filter((r) => toLower(r.accepts_cfp) === "yes").length;
-      const openCft = filteredRows.filter((r) => toLower(r.accepts_cft) === "yes").length;
-      const openCfw = filteredRows.filter((r) => toLower(r.accepts_cfw) === "yes").length;
+      const openCftOrCfw = filteredRows.filter(
+        (r) => toLower(r.accepts_cft) === "yes" || toLower(r.accepts_cfw) === "yes"
+      ).length;
+      const travelSupport = filteredRows.filter(
+        (r) => normalize(r.travel_accommodation_sponsorship) === "Yes"
+      ).length;
       const academic = filteredRows.filter((r) => toLower(r.academic_acceptance_level) === "academic").length;
       const dueSoon = filteredRows.filter((r) => {
         const info = getNextDeadlineInfo(r);
@@ -460,8 +465,8 @@
         { label: "Shown / Total", value: `${shown} / ${total}`, action: "clear", hint: "Reset to all conferences" },
         { label: "500+ Attendees", value: `${largeEvents}`, action: "attendees_500", hint: "Large audience events" },
         { label: "Open CfP", value: `${openCfp}`, action: "open_cfp", hint: "Accepts CfP = Yes" },
-        { label: "Open CfT", value: `${openCft}`, action: "open_cft", hint: "Accepts CfT = Yes" },
-        { label: "Open CfW", value: `${openCfw}`, action: "open_cfw", hint: "Accepts CfW = Yes" },
+        { label: "Open CfT / CfW", value: `${openCftOrCfw}`, action: "open_cft_or_cfw", hint: "Accepts training or workshops (either)" },
+        { label: "Travel support", value: `${travelSupport}`, action: "travel_support", hint: "Travel or accommodation sponsorship = Yes" },
         { label: "Due <= 30 Days", value: `${dueSoon}`, action: "due_30", hint: "Nearest deadline first" },
         { label: "Academic", value: `${academic}`, action: "academic", hint: "Academic acceptance level" }
       ];
@@ -883,6 +888,7 @@
         acceptsCfp: "CfP",
         acceptsCft: "CfT",
         acceptsCfw: "CfW",
+        cftOrCfw: "CfT or CfW",
         academicLevel: "Academic",
         sponsorship: "Sponsorship",
         conferenceType: "Type",
@@ -896,11 +902,15 @@
         el.activeFilterChips.innerHTML = "";
         return;
       }
-      el.activeFilterChips.innerHTML = activeEntries.map(([key, value]) => `
+      el.activeFilterChips.innerHTML = activeEntries.map(([key, value]) => {
+        const displayValue =
+          key === "cftOrCfw" && toLower(value) === "yes" ? "either CfT or CfW" : value;
+        return `
         <button class="chip" type="button" data-clear-filter="${key}">
-          <span>${labels[key] || key}:</span>${escapeHtml(value)} x
+          <span>${labels[key] || key}:</span>${escapeHtml(displayValue)} x
         </button>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function clearSingleFilter(key) {
@@ -1008,8 +1018,14 @@
       if (s.search && !text.includes(s.search.toLowerCase())) return false;
       if (s.attendees && normalize(row.attendees_500_plus) !== s.attendees) return false;
       if (s.acceptsCfp && normalize(row.accepts_cfp) !== s.acceptsCfp) return false;
-      if (s.acceptsCft && normalize(row.accepts_cft) !== s.acceptsCft) return false;
-      if (s.acceptsCfw && normalize(row.accepts_cfw) !== s.acceptsCfw) return false;
+      if (toLower(s.cftOrCfw) === "yes") {
+        const cftYes = normalize(row.accepts_cft) === "Yes";
+        const cfwYes = normalize(row.accepts_cfw) === "Yes";
+        if (!cftYes && !cfwYes) return false;
+      } else {
+        if (s.acceptsCft && normalize(row.accepts_cft) !== s.acceptsCft) return false;
+        if (s.acceptsCfw && normalize(row.accepts_cfw) !== s.acceptsCfw) return false;
+      }
       if (s.academicLevel && normalize(row.academic_acceptance_level) !== s.academicLevel) return false;
       if (s.sponsorship && normalize(row.travel_accommodation_sponsorship) !== s.sponsorship) return false;
       if (s.conferenceType && normalize(row.conference_type) !== s.conferenceType) return false;
@@ -1035,6 +1051,9 @@
       state.filters.cfpMonth = normalize(el.monthFilter.value);
       state.filters.venuePattern = normalize(el.venuePatternFilter.value);
       state.filters.sortBy = normalize(el.sortFilter.value) || "attendees_name";
+      if (state.filters.acceptsCft || state.filters.acceptsCfw) {
+        state.filters.cftOrCfw = "";
+      }
     }
 
     function updateFilterMeta() {
@@ -1050,9 +1069,13 @@
         return;
       }
       state.filters = defaultFilters();
-      if (preset === "open_cft") state.filters.acceptsCft = "Yes";
       if (preset === "open_cfp") state.filters.acceptsCfp = "Yes";
-      if (preset === "open_cfw") state.filters.acceptsCfw = "Yes";
+      if (preset === "open_cft_or_cfw") {
+        state.filters.cftOrCfw = "yes";
+        state.filters.acceptsCft = "";
+        state.filters.acceptsCfw = "";
+      }
+      if (preset === "travel_support") state.filters.sponsorship = "Yes";
       if (preset === "due_30") state.filters.deadlineWindow = "30";
       if (preset === "high_priority" || preset === "attendees_500") state.filters.attendees = "Yes";
       if (preset === "academic") state.filters.academicLevel = "Academic";
