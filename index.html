@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +8,24 @@
   <meta name="keywords" content="cybersecurity conferences, infosec conferences, hacking conferences, CFP deadlines, CFT, CFW, security call for papers" />
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <meta name="author" content="Conference Tracker" />
-  <meta name="theme-color" content="#050707" />
+  <meta name="theme-color" content="#f4f7f5" />
+  <script>
+    (function () {
+      try {
+        var theme = "light";
+        var raw = localStorage.getItem("conference_dashboard_ui_prefs_v1");
+        if (raw) {
+          var prefs = JSON.parse(raw);
+          if (prefs.theme === "dark" || prefs.theme === "light") theme = prefs.theme;
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "light" ? "#f4f7f5" : "#050707");
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+  </script>
   <link rel="icon" type="image/x-icon" href="./favicon.ico" sizes="any" />
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="canonical" href="https://conference-tracker.javan.de/" />
@@ -83,148 +100,372 @@
   </noscript>
   <main class="container" id="appMain" tabindex="-1">
     <section class="card header" aria-labelledby="pageTitle">
-      <div>
-        <h1 id="pageTitle">Cybersecurity, InfoSec & Hacking Conference Tracker</h1>
-        <p class="meta">Tracks CFP/CFT/CFW opportunities for cyber security conferences with live filtering and map insights</p>
-        <div class="project-links">
-          <a
-            class="github-link"
-            href="https://github.com/javanXD/ConferenceTracker"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open GitHub repository"
-          >
-            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-              <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.34c-2.24.49-2.71-1.08-2.71-1.08-.36-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.81.06 1.24.84 1.24.84.71 1.23 1.87.87 2.33.67.07-.53.28-.88.5-1.08-1.78-.21-3.64-.89-3.64-3.96 0-.88.31-1.59.83-2.15-.08-.2-.36-1.01.08-2.1 0 0 .67-.22 2.2.82a7.53 7.53 0 0 1 4.01 0c1.53-1.04 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.52.56.83 1.27.83 2.15 0 3.08-1.87 3.75-3.65 3.96.29.25.54.73.54 1.47v2.18c0 .21.14.45.55.38A8 8 0 0 0 8 0Z"></path>
-            </svg>
-            <span>GitHub Repo</span>
-          </a>
+      <div class="header-main">
+        <div>
+          <h1 id="pageTitle">Conference Tracker</h1>
+          <p class="meta header-tagline" id="headerTagline">
+            Browse cybersecurity conference CfP, CfT, and CfW deadlines with filters and a world map.
+          </p>
+        </div>
+        <div class="header-tools">
+          <div class="theme-row">
+            <span class="theme-label" id="themeLabel">Theme</span>
+            <button
+              type="button"
+              id="themeToggle"
+              class="btn-secondary theme-toggle btn-with-icon"
+              aria-pressed="true"
+              aria-labelledby="themeLabel themeToggleText"
+            >
+              <svg class="icon-svg theme-icon-light" viewBox="0 0 24 24" aria-hidden="true" hidden><path fill="currentColor" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2v-2H2v2zm18 0h2v-2h-2v2zM11 2v2h2V2h-2zm0 18v2h2v-2h-2zM5.99 4.58 4.58 5.99 5.99 7.41 7.41 5.99 5.99 4.58zm12.37 12.37 1.41 1.41 1.41-1.41-1.41-1.41-1.41 1.41zm1.41-16.24-1.41 1.41 1.41 1.41 1.41-1.41-1.41-1.41zM7.41 18.01l-1.41 1.41 1.41 1.41 1.41-1.41-1.41-1.41z"/></svg>
+              <svg class="icon-svg theme-icon-dark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+              <span id="themeToggleText">Dark mode</span>
+            </button>
+          </div>
+          <div class="persona-row">
+            <label class="persona-label" for="personaSelect">Viewing as</label>
+            <select id="personaSelect" class="persona-select" aria-describedby="personaHint">
+              <option value="speaker">Speaker</option>
+              <option value="attendee">Attendee</option>
+            </select>
+            <p class="persona-hint" id="personaHint" aria-live="polite"></p>
+          </div>
         </div>
       </div>
     </section>
 
+    <nav class="app-view-nav" aria-label="Primary areas">
+      <button type="button" class="app-view-btn active" id="appViewDiscover" data-app-section="discover" aria-current="page">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <span>Discover</span>
+      </button>
+      <button type="button" class="app-view-btn" id="appViewSpeaker" data-app-section="speaker">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Pipeline</span>
+      </button>
+      <button type="button" class="app-view-btn" id="appViewAttendee" data-app-section="attendee">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <span>Trips</span>
+      </button>
+      <button type="button" class="app-view-btn" id="appViewSettings" data-app-section="settings">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <section class="app-section" id="sectionDiscover" data-app-section="discover">
     <div class="tab-nav-bar">
-      <nav class="tab-nav" aria-label="Dashboard tabs">
-        <button type="button" class="tab-btn active" id="tabDashboard" data-tab="dashboard" aria-controls="panelDashboard" aria-selected="true">Dashboard</button>
-        <button type="button" class="tab-btn" id="tabMap" data-tab="map" aria-controls="panelMap" aria-selected="false">Cyber Map</button>
+      <nav class="tab-nav" aria-label="Discover tabs">
+        <button type="button" class="tab-btn active" id="tabDashboard" data-tab="dashboard" aria-controls="panelDashboard" aria-selected="true">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z"/></svg>
+          <span>Table</span>
+        </button>
+        <button type="button" class="tab-btn" id="tabMap" data-tab="map" aria-controls="panelMap" aria-selected="false">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+          <span>Map</span>
+        </button>
       </nav>
-      <div class="tab-nav-actions actions" role="toolbar" aria-label="Filter actions">
-        <button id="resetBtn" type="button" aria-keyshortcuts="Alt+0" title="Clear all filters and sorting (Alt+0)">Reset All Filters</button>
-      </div>
     </div>
 
     <section class="tab-panel" id="panelDashboard">
-      <section class="card" aria-labelledby="filtersHeading">
-      <h2 id="filtersHeading">Filters</h2>
+      <section class="card filters-card" aria-label="Conference filters">
+      <div class="discover-quick-actions" id="discoverQuickActions" role="toolbar" aria-label="Speaker shortcuts" hidden>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="discover">Open CfPs</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="due_14">≤14d</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="travel">Travel</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="industry">Industry</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="pipeline">Pipeline</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="region_europe">Europe</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="region_americas">Americas</button>
+        <button type="button" class="btn-secondary discover-quick-btn" data-speaker-preset="region_apac">APAC</button>
+      </div>
+      <div id="filtersWrap">
       <div class="filters" id="filters">
         <div class="field">
           <label for="searchInput">Search (name, city, country)</label>
-          <input id="searchInput" type="text" placeholder="Type to search..." aria-keyshortcuts="Alt+F" />
+          <input id="searchInput" type="search" placeholder="Type to search…" aria-keyshortcuts="Alt+F" autocomplete="off" />
         </div>
         <div class="field">
-          <label for="attendeesFilter">500+ Attendees</label>
-          <select id="attendeesFilter"><option value="">All</option></select>
+          <label for="favoritesFilter">Favorites</label>
+          <select id="favoritesFilter" aria-label="Favorites">
+            <option value="">All conferences</option>
+            <option value="yes">Starred only</option>
+          </select>
         </div>
         <div class="field">
+          <label for="attendeesFilter">500+ attendees</label>
+          <select id="attendeesFilter" aria-label="500 plus attendees"><option value="">All</option></select>
+        </div>
+        <div class="field speaker-only">
           <label for="acceptsCfpFilter">Accepts CfP</label>
-          <select id="acceptsCfpFilter"><option value="">All</option></select>
+          <select id="acceptsCfpFilter" aria-label="Accepts call for papers"><option value="">All</option></select>
         </div>
-        <div class="field">
+        <div class="field speaker-only">
           <label for="acceptsCftFilter">Accepts CfT</label>
-          <select id="acceptsCftFilter"><option value="">All</option></select>
+          <select id="acceptsCftFilter" aria-label="Accepts call for trainings"><option value="">All</option></select>
         </div>
-        <div class="field">
+        <div class="field speaker-only">
           <label for="acceptsCfwFilter">Accepts CfW</label>
-          <select id="acceptsCfwFilter"><option value="">All</option></select>
+          <select id="acceptsCfwFilter" aria-label="Accepts call for workshops"><option value="">All</option></select>
         </div>
-        <div class="field">
-          <label for="academicFilter">Academic Acceptance</label>
-          <select id="academicFilter"><option value="">All</option></select>
+        <div class="field speaker-only">
+          <label for="acceptsCfvFilter">Accepts CfV</label>
+          <select id="acceptsCfvFilter" aria-label="Accepts call for volunteers"><option value="">All</option></select>
         </div>
-        <div class="field">
-          <label for="sponsorshipFilter">Travel Sponsorship</label>
-          <select id="sponsorshipFilter"><option value="">All</option></select>
+        <div class="field advanced-filter speaker-only">
+          <label for="academicFilter">Academic level</label>
+          <select id="academicFilter" aria-label="Academic acceptance level"><option value="">All</option></select>
         </div>
-        <div class="field">
-          <label for="typeFilter">Conference Type</label>
-          <select id="typeFilter"><option value="">All</option></select>
+        <div class="field advanced-filter speaker-only">
+          <label for="sponsorshipFilter">Travel sponsorship</label>
+          <select id="sponsorshipFilter" aria-label="Travel or accommodation sponsorship"><option value="">All</option></select>
         </div>
-        <div class="field">
-          <label for="monthFilter">CfP Month</label>
-          <select id="monthFilter"><option value="">All</option></select>
+        <div class="field advanced-filter" id="advancedFiltersGroup">
+          <label for="typeFilter">Conference type</label>
+          <select id="typeFilter" aria-label="In person, hybrid, or virtual"><option value="">All</option></select>
         </div>
-        <div class="field">
-          <label for="venuePatternFilter">Venue Pattern</label>
-          <select id="venuePatternFilter"><option value="">All</option></select>
+        <div class="field advanced-filter speaker-only">
+          <label for="monthFilter">CfP month</label>
+          <select id="monthFilter" aria-label="Call for papers deadline month"><option value="">All</option></select>
         </div>
-        <div class="field">
-          <label for="sortFilter">Sort Rows</label>
-          <select id="sortFilter">
-            <option value="attendees_name">500+ Attendees then Name</option>
-            <option value="name_asc">Name A-Z</option>
-            <option value="month_name">CfP Month then Name</option>
-            <option value="deadline_soon">Next Deadline Soonest</option>
+        <div class="field advanced-filter">
+          <label for="venuePatternFilter">Venue pattern</label>
+          <select id="venuePatternFilter" aria-label="Rotating or fixed venue"><option value="">All</option></select>
+        </div>
+        <div class="field advanced-filter">
+          <label for="sortFilter">Sort rows</label>
+          <select id="sortFilter" aria-label="Sort table rows">
+            <option value="attendees_name">500+ attendees, then name</option>
+            <option value="name_asc">Name A–Z</option>
+            <option value="month_name">CfP month, then name</option>
+            <option value="deadline_soon">Next deadline soonest</option>
           </select>
         </div>
       </div>
-      <p class="meta" id="activeFilterMeta" role="status" aria-live="polite">No filters active</p>
-      <div class="chips" id="activeFilterChips"></div>
-      <div class="contrib-note">
-        <strong>Found missing or wrong data?</strong>
-        <a href="https://github.com/JavanXD/ConferenceTracker/fork" target="_blank" rel="noopener noreferrer">Fork the repo</a>, update <code>conferences.csv</code>, and open a PR with changed conference names and source links.
       </div>
+      <div class="filters-toolbar" role="toolbar" aria-label="Filter actions">
+        <button type="button" id="advancedFiltersBtn" class="btn-secondary" aria-expanded="false" aria-controls="advancedFiltersGroup">
+          Show more filters
+        </button>
+        <button id="resetBtn" type="button" class="btn-secondary btn-with-icon" aria-keyshortcuts="Alt+0" aria-label="Reset filters (Alt+0)">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 10V3.5c0-.83-.67-1.5-1.5-1.5S11 2.67 11 3.5V10l-7.78 7.83c-.63.64-.18 1.67.77 1.67h16.02c.95 0 1.4-1.03.77-1.67L14 10zM5 19h14v2H5v-2z"/></svg>
+          <span>Reset filters</span>
+        </button>
+      </div>
+      <p class="meta" id="activeFilterMeta" role="status" aria-live="polite">No filters active</p>
+      <div class="chips" id="activeFilterChips" aria-label="Active filters"></div>
+      <div class="summary summary-in-panel" id="summaryCards" aria-label="Summary metrics"></div>
     </section>
 
-      <section class="summary" id="summaryCards"></section>
-
       <section class="card" aria-labelledby="resultsHeading">
-        <h2 id="resultsHeading">Filtered Cybersecurity Conferences</h2>
+        <h2 id="resultsHeading">Conferences</h2>
+        <p class="panel-hint results-panel-hint">
+          Click a name for details. Use ★ to favorite.
+        </p>
+        <div class="results-toolbar-wrap">
+          <div class="results-toolbar" role="toolbar" aria-label="Export and share">
+            <button type="button" id="exportCsvBtn" class="toolbar-btn btn-secondary btn-with-icon" aria-label="Export filtered table as CSV">
+              <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+              <span>Export CSV</span>
+            </button>
+            <button type="button" id="copyViewLinkBtn" class="toolbar-btn btn-secondary btn-with-icon" aria-label="Copy shareable link with filters">
+              <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+              <span>Copy link</span>
+            </button>
+          </div>
+        </div>
         <div class="table-wrap">
           <table id="dataTable">
             <caption class="hidden">Filtered conference opportunities and submission information</caption>
             <thead>
               <tr>
-                <th data-sort-key="conference_name" class="clickable-th">Name</th>
-                <th data-sort-key="attendees_500_plus" class="clickable-th">500+?</th>
-                <th data-filter-key="acceptsCfp" class="clickable-th">CfP?</th>
-                <th data-filter-key="acceptsCft" class="clickable-th">CfT?</th>
-                <th data-filter-key="acceptsCfw" class="clickable-th">CfW?</th>
-                <th data-sort-key="academic_acceptance_level" class="clickable-th acceptance-col-th" title="Industry, academic, or mixed audience">Acad</th>
-                <th data-sort-key="cfp_deadline_month" class="clickable-th">Month</th>
-                <th>Tracks</th>
-                <th>Sponsor</th>
-                <th>CfP</th>
-                <th>CfT</th>
-                <th>CfW</th>
-                <th data-sort-key="conference_start_date" class="clickable-th">Start</th>
-                <th data-sort-key="conference_end_date" class="clickable-th">End</th>
-                <th data-sort-key="city" class="clickable-th">City</th>
-                <th data-sort-key="country" class="clickable-th" title="Country flag">Flag</th>
+                <th data-sort-key="conference_name" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by name">Name</button></th>
+                <th scope="col" class="fav-col"><span class="visually-hidden">Favorite</span>★</th>
+                <th data-sort-key="attendees_500_plus" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by 500 plus attendees">500+?</button></th>
+                <th data-filter-key="acceptsCfp" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for papers">CfP?</button></th>
+                <th data-filter-key="acceptsCft" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for trainings">CfT?</button></th>
+                <th data-filter-key="acceptsCfw" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for workshops">CfW?</button></th>
+                <th data-filter-key="acceptsCfv" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for volunteers">CfV?</button></th>
+                <th data-sort-key="academic_acceptance_level" class="clickable-th acceptance-col-th speaker-only-col" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by academic level">Acad</button></th>
+                <th class="speaker-only-col">Tracks</th>
+                <th class="speaker-only-col">Sponsor</th>
+                <th class="speaker-only-col">CfP</th>
+                <th class="speaker-only-col">CfT</th>
+                <th class="speaker-only-col">CfW</th>
+                <th class="speaker-only-col">CfV</th>
+                <th data-sort-key="conference_start_date" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference start date">Start</button></th>
+                <th data-sort-key="conference_end_date" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference end date">End</button></th>
+                <th data-sort-key="city" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by city">City</button></th>
+                <th data-sort-key="country" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by country">Flag</button></th>
                 <th>Site</th>
-                <th>T Link</th>
-                <th>W Link</th>
-                <th>Next Due</th>
+                <th class="speaker-only-col">T Link</th>
+                <th class="speaker-only-col">W Link</th>
+                <th class="speaker-only-col">V Link</th>
+                <th class="speaker-only-col">Next Due</th>
+                <th scope="col" class="actions-col" aria-label="Actions"></th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-        <p class="empty" id="emptyState" hidden>No cybersecurity conferences match current filters.</p>
+        <p class="empty" id="emptyState" hidden role="status">No conferences match the current filters.</p>
       </section>
     </section>
 
     <section class="tab-panel" id="panelMap" hidden>
       <section class="card map-card" aria-labelledby="mapHeading">
-        <h2 id="mapHeading">Cybersecurity Conference World Map</h2>
+        <h2 id="mapHeading">World map</h2>
+        <p class="panel-hint">Markers use city and country from the catalog. Choose whether to show all conferences or only the current filter.</p>
         <div class="map-controls" id="mapControls" role="group" aria-label="Map data source">
-          <button type="button" data-map-source="all" class="active">All Conferences</button>
-          <button type="button" data-map-source="filtered">Current Filters</button>
+          <button type="button" data-map-source="all" class="active">All conferences</button>
+          <button type="button" data-map-source="filtered">Current filters</button>
         </div>
         <div id="worldMap" role="img" aria-label="World map with conference city markers"></div>
-        <p class="map-meta" id="mapMeta">Preparing map...</p>
+        <p class="map-meta" id="mapMeta" aria-live="polite">Preparing map…</p>
       </section>
     </section>
+    </section>
+
+    <section class="app-section my-area-section" id="sectionSpeaker" data-app-section="speaker" hidden>
+      <div class="card my-area-card">
+        <h2 id="myPipelineHeading">Pipeline</h2>
+        <p class="meta my-area-meta">Track submissions by <strong>target year</strong>. On Discover, use <strong>Add</strong> on a conference row to include it here.</p>
+        <div class="planning-year-bar">
+          <label class="planning-year-label" for="pipelineYearFilter">Year</label>
+          <select id="pipelineYearFilter" class="planning-year-select" aria-label="Filter pipeline by planning year"></select>
+        </div>
+        <div class="my-area-toolbar" id="myPipelineToolbar" role="toolbar" aria-label="Export pipeline" hidden>
+          <button type="button" id="exportPipelineCsvBtn" class="btn-secondary btn-with-icon btn-icon-only" data-tip="Export pipeline as CSV" aria-label="Export pipeline as CSV">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span class="visually-hidden">CSV</span>
+          </button>
+          <button type="button" id="exportPipelineIcsBtn" class="btn-secondary btn-with-icon btn-icon-only" data-tip="Export pipeline deadlines to calendar" aria-label="Export pipeline to calendar">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span class="visually-hidden">Calendar</span>
+          </button>
+        </div>
+        <div id="pipelineUpcoming" class="upcoming-strip" hidden></div>
+        <div id="mySpeakerEmpty" class="my-area-empty" role="status"></div>
+        <div id="mySpeakerList" class="my-area-list" hidden></div>
+      </div>
+    </section>
+
+    <section class="app-section my-area-section" id="sectionAttendee" data-app-section="attendee" hidden>
+      <div class="card my-area-card">
+        <h2 id="myTripsHeading">Trips</h2>
+        <p class="meta my-area-meta">Plan travel by <strong>year</strong>. On Discover, use <strong>Save</strong> on a conference row. Set status to <strong>Deferred</strong> if you postpone.</p>
+        <div class="planning-year-bar">
+          <label class="planning-year-label" for="tripsYearFilter">Year</label>
+          <select id="tripsYearFilter" class="planning-year-select" aria-label="Filter trips by planning year"></select>
+        </div>
+        <div class="my-area-toolbar" id="myTripsToolbar" role="toolbar" aria-label="Export trips" hidden>
+          <button type="button" id="exportTripsCsvBtn" class="btn-secondary btn-with-icon btn-icon-only" data-tip="Export trips as CSV" aria-label="Export trips as CSV">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span class="visually-hidden">CSV</span>
+          </button>
+          <button type="button" id="exportTripsIcsBtn" class="btn-secondary btn-with-icon btn-icon-only" data-tip="Export trips to calendar" aria-label="Export trips to calendar">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span class="visually-hidden">Calendar</span>
+          </button>
+        </div>
+        <div id="tripsUpcoming" class="upcoming-strip" hidden></div>
+        <div id="myTripsEmpty" class="my-area-empty" role="status"></div>
+        <div id="myTripsList" class="my-area-list" hidden></div>
+      </div>
+    </section>
+
+    <section class="app-section" id="sectionSettings" data-app-section="settings" hidden>
+      <div class="card backup-card">
+        <h2 id="backupHeading">Backup &amp; restore</h2>
+        <p class="meta backup-intro">
+          Export or import a JSON file of everything stored in this browser: filters, favorites, notes, pipeline, trips, and preferences. Use it to move between devices or before clearing site data.
+        </p>
+        <div class="backup-toolbar" role="group" aria-label="Backup and restore">
+          <button type="button" id="exportStorageBtn" class="btn-secondary btn-with-icon" aria-label="Download backup">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            <span>Export</span>
+          </button>
+          <button type="button" id="importStorageBtn" class="btn-secondary btn-with-icon" aria-label="Restore from file">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+            <span>Import</span>
+          </button>
+          <input type="file" id="importStorageFile" accept="application/json,.json" hidden />
+        </div>
+        <p id="backupStatus" class="backup-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p class="footer-links">
+        <button type="button" class="footer-link-btn" id="footerShortcutsBtn" aria-label="Open keyboard shortcuts">?<span class="visually-hidden"> Keyboard shortcuts</span></button>
+      </p>
+      <p id="footerStatus" class="footer-status" role="status" aria-live="polite"></p>
+    </div>
+  </footer>
+
+  <dialog id="shortcutsDialog" class="shortcuts-dialog" aria-labelledby="shortcutsTitle">
+    <div class="shortcuts-inner">
+      <h2 id="shortcutsTitle">Keyboard shortcuts</h2>
+      <dl class="shortcuts-dl">
+        <dt>Focus search</dt>
+        <dd><kbd class="kbd">Alt</kbd>+<kbd class="kbd">F</kbd></dd>
+        <dt>Reset filters</dt>
+        <dd><kbd class="kbd">Alt</kbd>+<kbd class="kbd">0</kbd></dd>
+        <dt>This help</dt>
+        <dd><kbd class="kbd">?</kbd></dd>
+        <dt>Close dialog</dt>
+        <dd><kbd class="kbd">Esc</kbd></dd>
+      </dl>
+      <p class="shortcuts-note">Table column headers are buttons: activate to sort or cycle Yes / No / All filters.</p>
+      <div class="shortcuts-actions">
+        <button type="button" class="primary-btn" id="shortcutsCloseBtn">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="onboardingDialog" class="onboarding-dialog" aria-labelledby="onboardingTitle">
+    <div class="onboarding-inner">
+      <h2 id="onboardingTitle">How will you use Conference Tracker?</h2>
+      <p class="onboarding-lead">Pick a role to tune navigation and defaults. You can change this anytime in the header.</p>
+      <fieldset class="persona-fieldset">
+        <legend class="visually-hidden">Choose your role</legend>
+        <div class="persona-options" id="onboardingPersonaOptions">
+          <label class="persona-option">
+            <input type="radio" name="onboardingPersona" value="speaker" checked />
+            <span class="persona-option-title">Speaker</span>
+            <span class="persona-option-desc">Find open CfPs, track deadlines, and manage your submission pipeline.</span>
+          </label>
+          <label class="persona-option">
+            <input type="radio" name="onboardingPersona" value="attendee" />
+            <span class="persona-option-title">Attendee</span>
+            <span class="persona-option-desc">Discover events and save trips to plan by year.</span>
+          </label>
+        </div>
+      </fieldset>
+      <div class="onboarding-actions">
+        <button type="button" class="primary-btn" id="onboardingContinue">Continue</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="conferenceDetailDialog" class="conference-dialog" aria-labelledby="conferenceDetailTitle">
+    <div class="conference-dialog-inner">
+      <div class="conference-dialog-header">
+        <h2 id="conferenceDetailTitle"></h2>
+        <button type="button" class="dialog-close-x" id="conferenceDetailClose" aria-label="Close">
+          <svg class="icon-svg icon-svg-lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div id="conferenceDetailBody" class="conference-detail-body"></div>
+      <label class="detail-notes-label" for="conferenceDetailNotes">Private notes (saved in this browser only)</label>
+      <textarea id="conferenceDetailNotes" class="detail-notes-textarea" rows="3" maxlength="8000" placeholder="Your planning notes…" aria-describedby="conferenceDetailHint"></textarea>
+      <div class="detail-dialog-actions" id="conferenceDetailToolbar"></div>
+      <p class="meta detail-dialog-hint" id="conferenceDetailHint">Tip: URLs with <code>?c=…</code> reopen this conference after you bookmark or share the link.</p>
+    </div>
+  </dialog>
 
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"

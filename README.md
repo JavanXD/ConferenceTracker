@@ -20,6 +20,12 @@ ConferenceTracker helps you:
 
 In short, this repository turns conference discovery from an ad-hoc process into a repeatable workflow that supports both career development and team planning.
 
+## No backend required
+
+This project is a **static site** (HTML, CSS, JavaScript, and `conferences.csv`). There is **no** server-side app, database, or account system to deploy. Personal UI state (filters, persona mode, pipeline, saved trips) stays in **your browser** using `localStorage` and does not get sent to a server.
+
+You can use the **public deployment**, **self-host** a copy, or **run locally**—see [How to run (no backend)](#how-to-run-no-backend) below. Optional future features (accounts, verified badges, sync) would be additive; the core tracker is intended to remain usable as static files only.
+
 ## Quick Copy Prompt
 
 ```text
@@ -45,6 +51,8 @@ Return:
 ```
 
 ## For AI Agents: Fast Workflow
+
+Project skill (Cursor): [`.cursor/skills/update-conference-data/`](.cursor/skills/update-conference-data/SKILL.md) — full CSV schema, research rules, and update/add workflow.
 
 Use one of these two paths.
 
@@ -84,26 +92,29 @@ Keep the exact header order in `conferences.csv`:
 7. `accepts_cfp` - `Yes|No|Unknown`
 8. `accepts_cft` - `Yes|No|Unknown`
 9. `accepts_cfw` - `Yes|No|Unknown`
-10. `travel_accommodation_sponsorship` - `Yes|No|Unknown|Partial`
-11. `cfp_deadline_MM-DD` - `MM-DD` or `TBD`
-12. `cft_deadline_MM-DD` - `MM-DD` or `TBD`
-13. `cfw_deadline_MM-DD` - `MM-DD` or `TBD`
-14. `conference_start_date` - `YYYY-MM-DD` or `TBD`
-15. `conference_end_date` - `YYYY-MM-DD` or `TBD`
-16. `city` - concrete city, or `TBD` when unknown
-17. `country` - concrete country (prefer normalized names like `United States`, `United Kingdom`)
-18. `website_or_cfp_link` - main site or direct CFP page URL
-19. `cft_link` - direct CfT URL or blank
-20. `cfw_link` - direct CfW URL or blank
-21. `conference_type` - `In-Person|Hybrid|Virtual`
-22. `timezone` - valid IANA timezone (e.g. `Europe/Berlin`)
-23. `notes` - short evidence/assumption notes
-24. `last_verified_date` - `YYYY-MM-DD`
-25. `venue_pattern` - `Rotating|Mostly Fixed|Fixed|Unknown`
+10. `accepts_cfv` - `Yes|No|Unknown` (Call for Volunteers)
+11. `travel_accommodation_sponsorship` - `Yes|No|Unknown|Partial`
+12. `cfp_deadline_MM-DD` - `MM-DD` or `TBD`
+13. `cft_deadline_MM-DD` - `MM-DD` or `TBD`
+14. `cfw_deadline_MM-DD` - `MM-DD` or `TBD`
+15. `cfv_deadline_MM-DD` - `MM-DD` or `TBD`
+16. `conference_start_date` - `YYYY-MM-DD` or `TBD`
+17. `conference_end_date` - `YYYY-MM-DD` or `TBD`
+18. `city` - concrete city, or `TBD` when unknown
+19. `country` - concrete country (prefer normalized names like `United States`, `United Kingdom`)
+20. `website_or_cfp_link` - main site or direct CFP page URL
+21. `cft_link` - direct CfT URL or blank
+22. `cfw_link` - direct CfW URL or blank
+23. `cfv_link` - direct CfV URL or blank
+24. `conference_type` - `In-Person|Hybrid|Virtual`
+25. `timezone` - valid IANA timezone (e.g. `Europe/Berlin`)
+26. `notes` - short evidence/assumption notes
+27. `last_verified_date` - `YYYY-MM-DD`
+28. `venue_pattern` - `Rotating|Mostly Fixed|Fixed|Unknown`
 
 ### Hard Rules
 
-- Do not add/remove/reorder columns.
+- Follow the exact column order and header names in `conferences.csv` (do not reorder existing columns).
 - Do not change enum values to free text.
 - Use `TBD`/`Unknown` instead of guessing.
 - If using estimated values from prior years, write `Estimated ...` in `notes`.
@@ -129,9 +140,9 @@ Execution rules:
 3) Use strict field formats:
    - `attendees_500_plus`: Yes|No|Unknown
    - `academic_acceptance_level`: Academic|Industry|Mixed|Unknown
-   - `accepts_cfp` / `accepts_cft` / `accepts_cfw`: Yes|No|Unknown
+   - `accepts_cfp` / `accepts_cft` / `accepts_cfw` / `accepts_cfv`: Yes|No|Unknown
    - `travel_accommodation_sponsorship`: Yes|No|Unknown|Partial
-   - `cfp_deadline_MM-DD` / `cft_deadline_MM-DD` / `cfw_deadline_MM-DD`: MM-DD or TBD
+   - `cfp_deadline_MM-DD` / `cft_deadline_MM-DD` / `cfw_deadline_MM-DD` / `cfv_deadline_MM-DD`: MM-DD or TBD
    - `conference_start_date` / `conference_end_date` / `last_verified_date`: YYYY-MM-DD or TBD
    - `conference_type`: In-Person|Hybrid|Virtual
    - `timezone`: valid IANA timezone (e.g. Europe/Berlin)
@@ -154,9 +165,31 @@ Return:
 
 For PR-based contribution steps (branching, commit, and PR checklist), see `CONTRIBUTING.md`.
 
-## Local Dashboard Run
+## How to run (no backend)
 
-Run a local server from the project root:
+The dashboard only needs **static file hosting** (or a local HTTP server). Pick one:
+
+### 1. Use the public site
+
+Browse and filter without cloning anything:
+
+**[https://conference-tracker.javan.de/](https://conference-tracker.javan.de/)**
+
+### 2. Self-host
+
+Serve the **repository root** as static files. No runtime, build step, or database is required for the web UI.
+
+Examples:
+
+- **GitHub Pages:** Enable Pages on your fork; publish the branch/folder that contains `index.html` (often the repo root). Relative paths (`./app.js`, `./conferences.csv`) work as long as the site entry URL matches your folder layout.
+- **Any static host or web server:** Copy the project files and point the document root at this directory.
+- **Object storage + CDN:** Upload the same files; keep relative paths intact.
+
+Forkers get their own URL (e.g. `https://<user>.github.io/<repo>/`); the app works the same.
+
+### 3. Run locally
+
+Browsers block loading `conferences.csv` from `file://` pages, so use a small local HTTP server. From the project root:
 
 ```bash
 python3 -m http.server 8000
@@ -164,21 +197,33 @@ python3 -m http.server 8000
 
 Open [http://localhost:8000/index.html](http://localhost:8000/index.html).
 
-## Data Verification Pipeline
+Other static servers are fine (for example `npx serve .` or any tool that serves the folder over HTTP).
 
-Use `pipeline_verify_enrich.py` to validate every row, test links, discover likely CFP/CfT/CfW URLs from official pages, and generate a report.
+### Backup and restore (browser data)
+
+The UI includes **Backup & restore**: export or import a JSON file of everything this app keeps in `localStorage` (filters, favorites, private notes, persona, pipeline, saved trips, geocode cache, UI preferences, etc.). Use it to move between browsers or devices, or to snapshot before clearing site data—no account or server required.
+
+### Offline tools (no account)
+
+- **Conference details** — Click a conference name to open a panel with links, persona actions, and optional **private notes** (stored locally). The URL can include `?c=…` to deep-link to a conference after you share or bookmark the link.
+- **Export filtered CSV** — Download the current filtered table (plus your notes column) for spreadsheets.
+- **Copy shareable link** — Copies the current URL (filters and `persona` / `view` params) for others or another device.
+- **Calendar (.ics)** — From the detail panel, download an all-day event for the **next upcoming** CfP/CfT/CfW deadline (when the CSV has a valid date).
+
+## Discovery tooling (optional, gitignored)
+
+Scraping and pipeline automation live in **`discovery/`** (excluded from git — see `discovery/README.md` after you create it locally). Produces proposal CSVs for review; does **not** change `conferences.csv` by default.
 
 ```bash
-# Dry run (no CSV changes)
-python3 pipeline_verify_enrich.py
-
-# Apply safe fixes directly to conferences.csv
-python3 pipeline_verify_enrich.py --apply
+discovery/extractors/.venv/bin/python discovery/pipeline/sync.py --research --backend web
 ```
 
-Output report:
-- `reports/verification-YYYY-MM-DD.md`
+Merge approved rows with the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md). Details: `discovery/pipeline/GITHUB_ACTIONS.md`, `discovery/pipeline/SECRETS.md`.
 
-Notes:
-- The pipeline is conservative and does not invent dates or enum values.
-- It updates fields only when there is clear link/track evidence and leaves uncertain values as `TBD`/`Unknown`.
+## Verifying catalog data
+
+Before changing `conferences.csv`:
+
+1. Research on **official** sources — use the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md) (required for non-trivial edits).
+2. Spot-check in the app (`python3 -m http.server 8000` → open `index.html`) and watch the browser console for CSV warnings.
+3. When merging from **discovery proposals** (local `discovery/` folder), run `discovery/pipeline/validate_proposal.py` on the proposal CSV first; see `discovery/pipeline/HUMAN_REVIEW.md`.

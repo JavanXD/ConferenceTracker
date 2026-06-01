@@ -2,6 +2,72 @@
     const STORAGE_KEY = "conference_dashboard_filters_v1";
     const GEO_CACHE_KEY = "conference_dashboard_geo_cache_v3";
     const UI_PREFS_KEY = "conference_dashboard_ui_prefs_v1";
+    const PERSONA_KEY = "conference_dashboard_persona_v1";
+    const APP_SECTION_KEY = "conference_dashboard_app_section_v1";
+    const ONBOARDING_KEY = "conference_dashboard_onboarding_v1";
+    const PIPELINE_KEY = "conference_dashboard_pipeline_v1";
+    const SAVED_TRIPS_KEY = "conference_dashboard_saved_trips_v1";
+    const FAVORITES_KEY = "conference_dashboard_favorites_v1";
+    const NOTES_KEY = "conference_dashboard_notes_v1";
+    const PLANNING_PREFS_KEY = "conference_dashboard_planning_prefs_v1";
+
+    const TRIP_PLAN = {
+      planning: "planning",
+      deferred: "deferred",
+      attended: "attended",
+      skipped: "skipped"
+    };
+
+    const PIPE_PLAN = {
+      active: "active",
+      deferred: "deferred",
+      done: "done"
+    };
+
+    const BACKUP_FORMAT_VERSION = 1;
+    const KNOWN_STORAGE_KEYS = [
+      STORAGE_KEY,
+      GEO_CACHE_KEY,
+      UI_PREFS_KEY,
+      PERSONA_KEY,
+      APP_SECTION_KEY,
+      ONBOARDING_KEY,
+      PIPELINE_KEY,
+      SAVED_TRIPS_KEY,
+      FAVORITES_KEY,
+      NOTES_KEY,
+      PLANNING_PREFS_KEY
+    ];
+
+    const CSV_EXPORT_KEYS = [
+      "conference_name",
+      "city",
+      "country",
+      "cfp_deadline_month",
+      "accepts_cfp",
+      "accepts_cft",
+      "accepts_cfw",
+      "cfp_deadline",
+      "cft_deadline",
+      "cfw_deadline",
+      "conference_start_date",
+      "conference_end_date",
+      "submission_tracks",
+      "travel_accommodation_sponsorship",
+      "conference_type",
+      "website_or_cfp_link",
+      "cft_link",
+      "cfw_link"
+    ];
+
+    const PIPELINE_STATUSES = [
+      { value: "watching", label: "Watching" },
+      { value: "drafting", label: "Drafting" },
+      { value: "submitted", label: "Submitted" },
+      { value: "accepted", label: "Accepted" },
+      { value: "declined", label: "Declined" },
+      { value: "waitlisted", label: "Waitlisted" }
+    ];
 
     function defaultFilters() {
       return {
@@ -10,6 +76,7 @@
         acceptsCfp: "",
         acceptsCft: "",
         acceptsCfw: "",
+        acceptsCfv: "",
         cftOrCfw: "",
         academicLevel: "",
         sponsorship: "",
@@ -17,7 +84,21 @@
         cfpMonth: "",
         venuePattern: "",
         deadlineWindow: "",
+        favoritesOnly: "",
+        region: "",
+        actionableCfp: "",
+        industryTalks: "",
+        inPipeline: "",
         sortBy: "attendees_name"
+      };
+    }
+
+    function speakerPresetFilters() {
+      return {
+        ...defaultFilters(),
+        acceptsCfp: "Yes",
+        actionableCfp: "yes",
+        sortBy: "deadline_soon"
       };
     }
 
@@ -27,7 +108,19 @@
       headerSort: { key: "", direction: "asc" },
       activeTab: "dashboard",
       geocodeCache: {},
-      mapSource: "all"
+      mapSource: "all",
+      personaMode: "speaker",
+      appSection: "discover",
+      pipeline: [],
+      savedTrips: [],
+      favorites: [],
+      notes: {},
+      detailConferenceName: "",
+      _personaFromUrl: false,
+      _sectionFromUrl: false,
+      planningYearFilterPipeline: "all",
+      planningYearFilterTrips: "all",
+      theme: "light"
     };
 
     let mapInstance = null;
@@ -39,6 +132,7 @@
       acceptsCfpFilter: document.getElementById("acceptsCfpFilter"),
       acceptsCftFilter: document.getElementById("acceptsCftFilter"),
       acceptsCfwFilter: document.getElementById("acceptsCfwFilter"),
+      acceptsCfvFilter: document.getElementById("acceptsCfvFilter"),
       academicFilter: document.getElementById("academicFilter"),
       sponsorshipFilter: document.getElementById("sponsorshipFilter"),
       typeFilter: document.getElementById("typeFilter"),
@@ -58,8 +152,92 @@
       panelMap: document.getElementById("panelMap"),
       worldMap: document.getElementById("worldMap"),
       mapMeta: document.getElementById("mapMeta"),
-      mapControls: document.getElementById("mapControls")
+      mapControls: document.getElementById("mapControls"),
+      personaSelect: document.getElementById("personaSelect"),
+      personaHint: document.getElementById("personaHint"),
+      themeToggle: document.getElementById("themeToggle"),
+      themeToggleText: document.getElementById("themeToggleText"),
+      sectionDiscover: document.getElementById("sectionDiscover"),
+      sectionSpeaker: document.getElementById("sectionSpeaker"),
+      sectionAttendee: document.getElementById("sectionAttendee"),
+      sectionSettings: document.getElementById("sectionSettings"),
+      onboardingDialog: document.getElementById("onboardingDialog"),
+      onboardingContinue: document.getElementById("onboardingContinue"),
+      mySpeakerEmpty: document.getElementById("mySpeakerEmpty"),
+      mySpeakerList: document.getElementById("mySpeakerList"),
+      myPipelineToolbar: document.getElementById("myPipelineToolbar"),
+      exportPipelineCsvBtn: document.getElementById("exportPipelineCsvBtn"),
+      exportPipelineIcsBtn: document.getElementById("exportPipelineIcsBtn"),
+      pipelineUpcoming: document.getElementById("pipelineUpcoming"),
+      myTripsEmpty: document.getElementById("myTripsEmpty"),
+      myTripsList: document.getElementById("myTripsList"),
+      myTripsToolbar: document.getElementById("myTripsToolbar"),
+      exportTripsCsvBtn: document.getElementById("exportTripsCsvBtn"),
+      exportTripsIcsBtn: document.getElementById("exportTripsIcsBtn"),
+      tripsUpcoming: document.getElementById("tripsUpcoming"),
+      footerStatus: document.getElementById("footerStatus"),
+      shortcutsDialog: document.getElementById("shortcutsDialog"),
+      shortcutsCloseBtn: document.getElementById("shortcutsCloseBtn"),
+      footerShortcutsBtn: document.getElementById("footerShortcutsBtn"),
+      pipelineYearFilter: document.getElementById("pipelineYearFilter"),
+      tripsYearFilter: document.getElementById("tripsYearFilter"),
+      favoritesFilter: document.getElementById("favoritesFilter"),
+      exportStorageBtn: document.getElementById("exportStorageBtn"),
+      importStorageBtn: document.getElementById("importStorageBtn"),
+      importStorageFile: document.getElementById("importStorageFile"),
+      backupStatus: document.getElementById("backupStatus"),
+      exportCsvBtn: document.getElementById("exportCsvBtn"),
+      copyViewLinkBtn: document.getElementById("copyViewLinkBtn"),
+      conferenceDetailDialog: document.getElementById("conferenceDetailDialog"),
+      conferenceDetailTitle: document.getElementById("conferenceDetailTitle"),
+      conferenceDetailBody: document.getElementById("conferenceDetailBody"),
+      conferenceDetailNotes: document.getElementById("conferenceDetailNotes"),
+      conferenceDetailToolbar: document.getElementById("conferenceDetailToolbar"),
+      conferenceDetailHint: document.getElementById("conferenceDetailHint"),
+      conferenceDetailClose: document.getElementById("conferenceDetailClose"),
+      discoverQuickActions: document.getElementById("discoverQuickActions"),
+      advancedFiltersBtn: document.getElementById("advancedFiltersBtn"),
+      advancedFilterFields: [...document.querySelectorAll(".advanced-filter")],
+      appViewNav: document.querySelector(".app-view-nav"),
+      appViewDiscover: document.getElementById("appViewDiscover"),
+      appViewSpeaker: document.getElementById("appViewSpeaker"),
+      appViewAttendee: document.getElementById("appViewAttendee"),
+      appViewSettings: document.getElementById("appViewSettings"),
+      tabNav: document.querySelector(".tab-nav")
     };
+
+    function iconSvg(pathD) {
+      return `<svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${pathD}"/></svg>`;
+    }
+
+    const ICON = {
+      remove: iconSvg(
+        "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+      ),
+      clipboard: iconSvg(
+        "M19 9h-4V3H9v6H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+      ),
+      place: iconSvg(
+        "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+      ),
+      openInNew: iconSvg(
+        "M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"
+      ),
+      calendar: iconSvg(
+        "M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"
+      ),
+      link: iconSvg(
+        "M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
+      ),
+      star: iconSvg(
+        "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+      ),
+      starOutline: iconSvg(
+        "M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zm-7.41 5.29L12 15.9l-2.59-1.37L9.18 12 12 10.47l2.82 1.53 1.41 1.41z"
+      )
+    };
+
+    let advancedFiltersExpanded = false;
 
     function normalize(value) {
       return (value ?? "").toString().trim();
@@ -67,6 +245,164 @@
 
     function toLower(value) {
       return normalize(value).toLowerCase();
+    }
+
+    function planningYearFromRow(row) {
+      if (!row) return new Date().getFullYear();
+      const d = normalize(row.conference_start_date);
+      const m = /^(\d{4})-/.exec(d);
+      return m ? parseInt(m[1], 10) : new Date().getFullYear();
+    }
+
+    function normalizePipelineItem(raw, yearFallback) {
+      const yDef = Number.isFinite(yearFallback) ? yearFallback : new Date().getFullYear();
+      if (typeof raw === "string") {
+        return { name: normalize(raw), status: "watching", planningYear: yDef, pipePlan: PIPE_PLAN.active };
+      }
+      if (!raw || typeof raw !== "object" || !raw.name) return null;
+      const name = normalize(raw.name);
+      let status = normalize(raw.status).toLowerCase() || "watching";
+      if (!PIPELINE_STATUSES.some((s) => s.value === status)) status = "watching";
+      let planningYear = Number(raw.planningYear);
+      if (!Number.isFinite(planningYear) || planningYear < 2000 || planningYear > 2100) planningYear = yDef;
+      let pipePlan = normalize(raw.pipePlan).toLowerCase();
+      if (!Object.values(PIPE_PLAN).includes(pipePlan)) pipePlan = PIPE_PLAN.active;
+      return { name, status, planningYear, pipePlan };
+    }
+
+    function normalizeTripEntry(raw, yearFallback) {
+      const yDef = Number.isFinite(yearFallback) ? yearFallback : new Date().getFullYear();
+      if (typeof raw === "string") {
+        return { name: normalize(raw), planningYear: yDef, tripPlan: TRIP_PLAN.planning };
+      }
+      if (!raw || typeof raw !== "object" || !raw.name) return null;
+      const name = normalize(raw.name);
+      let planningYear = Number(raw.planningYear);
+      if (!Number.isFinite(planningYear) || planningYear < 2000 || planningYear > 2100) planningYear = yDef;
+      let tripPlan = normalize(raw.tripPlan).toLowerCase();
+      if (!Object.values(TRIP_PLAN).includes(tripPlan)) tripPlan = TRIP_PLAN.planning;
+      return { name, planningYear, tripPlan };
+    }
+
+    function getTripEntry(name) {
+      const n = normalize(name);
+      return state.savedTrips.find((t) => normalize(t.name) === n) || null;
+    }
+
+    function getPipelineEntry(name) {
+      const n = normalize(name);
+      return state.pipeline.find((p) => normalize(p.name) === n) || null;
+    }
+
+    function tripPlanLabel(v) {
+      const map = {
+        [TRIP_PLAN.planning]: "Planning",
+        [TRIP_PLAN.deferred]: "Deferred",
+        [TRIP_PLAN.attended]: "Attended",
+        [TRIP_PLAN.skipped]: "Skipped"
+      };
+      return map[v] || v;
+    }
+
+    function pipePlanLabel(v) {
+      const map = {
+        [PIPE_PLAN.active]: "Active",
+        [PIPE_PLAN.deferred]: "Deferred",
+        [PIPE_PLAN.done]: "Done"
+      };
+      return map[v] || v;
+    }
+
+    function filterYearOptionsHtml(selected) {
+      let html = `<option value="all"${selected === "all" ? " selected" : ""}>All years</option>`;
+      const y0 = new Date().getFullYear();
+      for (let y = y0 - 2; y <= y0 + 8; y++) {
+        html += `<option value="${y}"${String(selected) === String(y) ? " selected" : ""}>${y}</option>`;
+      }
+      return html;
+    }
+
+    function yearSelectHtml(selected, attrName, enc) {
+      const y0 = new Date().getFullYear();
+      let opts = "";
+      for (let y = y0 - 2; y <= y0 + 8; y++) {
+        opts += `<option value="${y}"${Number(selected) === y ? " selected" : ""}>${y}</option>`;
+      }
+      return `<select class="my-plan-year-select" ${attrName}="${enc}" aria-label="Target year">${opts}</select>`;
+    }
+
+    function tripPlanSelectHtml(value, dataCname) {
+      const cur = normalize(value).toLowerCase() || TRIP_PLAN.planning;
+      return `<select class="my-trip-plan-select" data-trip-plan-status data-cname="${dataCname}" aria-label="Trip status">
+        ${Object.values(TRIP_PLAN)
+          .map((v) => `<option value="${v}"${cur === v ? " selected" : ""}>${tripPlanLabel(v)}</option>`)
+          .join("")}
+      </select>`;
+    }
+
+    function pipePlanSelectHtml(value, dataCname) {
+      const cur = normalize(value).toLowerCase() || PIPE_PLAN.active;
+      return `<select class="my-pipe-plan-select" data-pipe-plan-status data-cname="${dataCname}" aria-label="Plan status">
+        ${Object.values(PIPE_PLAN)
+          .map((v) => `<option value="${v}"${cur === v ? " selected" : ""}>${pipePlanLabel(v)}</option>`)
+          .join("")}
+      </select>`;
+    }
+
+    function loadPlanningPrefs() {
+      try {
+        const raw = localStorage.getItem(PLANNING_PREFS_KEY);
+        if (!raw) return;
+        const p = JSON.parse(raw);
+        if (!p || typeof p !== "object") return;
+        if (p.pipeline === "all" || (p.pipeline != null && /^\d+$/.test(String(p.pipeline)))) {
+          state.planningYearFilterPipeline = p.pipeline === "all" ? "all" : Number(p.pipeline);
+        }
+        if (p.trips === "all" || (p.trips != null && /^\d+$/.test(String(p.trips)))) {
+          state.planningYearFilterTrips = p.trips === "all" ? "all" : Number(p.trips);
+        }
+      } catch (err) {
+        console.warn("Could not load planning prefs", err);
+      }
+    }
+
+    function savePlanningPrefs() {
+      try {
+        localStorage.setItem(
+          PLANNING_PREFS_KEY,
+          JSON.stringify({
+            pipeline: state.planningYearFilterPipeline,
+            trips: state.planningYearFilterTrips
+          })
+        );
+      } catch (err) {
+        console.warn("Could not save planning prefs", err);
+      }
+    }
+
+    function syncPlanningFilterControls() {
+      if (el.pipelineYearFilter) {
+        el.pipelineYearFilter.innerHTML = filterYearOptionsHtml(state.planningYearFilterPipeline);
+        el.pipelineYearFilter.value =
+          state.planningYearFilterPipeline === "all" ? "all" : String(state.planningYearFilterPipeline);
+      }
+      if (el.tripsYearFilter) {
+        el.tripsYearFilter.innerHTML = filterYearOptionsHtml(state.planningYearFilterTrips);
+        el.tripsYearFilter.value =
+          state.planningYearFilterTrips === "all" ? "all" : String(state.planningYearFilterTrips);
+      }
+    }
+
+    function getFilteredPipeline() {
+      if (state.planningYearFilterPipeline === "all") return state.pipeline.slice();
+      const y = Number(state.planningYearFilterPipeline);
+      return state.pipeline.filter((p) => Number(p.planningYear) === y);
+    }
+
+    function getFilteredTrips() {
+      if (state.planningYearFilterTrips === "all") return state.savedTrips.slice();
+      const y = Number(state.planningYearFilterTrips);
+      return state.savedTrips.filter((t) => Number(t.planningYear) === y);
     }
 
     function loadGeocodeCache() {
@@ -120,15 +456,1291 @@
         }
         params.set(key, normalized);
       });
+      if (state.personaMode && state.personaMode !== "speaker") {
+        params.set("persona", state.personaMode);
+      } else {
+        params.delete("persona");
+      }
+      if (state.appSection && state.appSection !== "discover") {
+        params.set("view", state.appSection);
+      } else {
+        params.delete("view");
+      }
       const query = params.toString();
       const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
       window.history.replaceState(null, "", nextUrl);
     }
 
+    function readAppMetaFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("persona")) {
+        const val = normalize(params.get("persona")).toLowerCase();
+        if (["speaker", "attendee"].includes(val)) {
+          state.personaMode = val;
+          state._personaFromUrl = true;
+        }
+      }
+      if (params.has("view")) {
+        const val = normalize(params.get("view")).toLowerCase();
+        if (["discover", "speaker", "attendee", "settings"].includes(val)) {
+          state.appSection = val;
+          state._sectionFromUrl = true;
+        }
+      }
+    }
+
+    function migrateLegacyPersonaState() {
+      let changed = false;
+      if (state.personaMode === "organiser") {
+        state.personaMode = "speaker";
+        changed = true;
+      }
+      if (state.appSection === "organiser") {
+        state.appSection = "discover";
+        changed = true;
+      }
+      if (changed) {
+        savePersonaMode();
+        saveAppSection();
+      }
+    }
+
+    function loadPersonaAndSectionFromStorage() {
+      if (!state._personaFromUrl) {
+        try {
+          const raw = localStorage.getItem(PERSONA_KEY);
+          if (raw && ["speaker", "attendee"].includes(raw)) {
+            state.personaMode = raw;
+          }
+        } catch (err) {
+          console.warn("Could not read persona preference", err);
+        }
+      }
+      if (!state._sectionFromUrl) {
+        try {
+          const raw = localStorage.getItem(APP_SECTION_KEY);
+          if (raw && ["discover", "speaker", "attendee", "settings"].includes(raw)) {
+            state.appSection = raw;
+          }
+        } catch (err) {
+          console.warn("Could not read app section preference", err);
+        }
+      }
+      migrateLegacyPersonaState();
+    }
+
+    function savePersonaMode() {
+      try {
+        localStorage.setItem(PERSONA_KEY, state.personaMode);
+      } catch (err) {
+        console.warn("Could not save persona preference", err);
+      }
+    }
+
+    function saveAppSection() {
+      try {
+        localStorage.setItem(APP_SECTION_KEY, state.appSection);
+      } catch (err) {
+        console.warn("Could not save app section preference", err);
+      }
+    }
+
+    function loadPipeline() {
+      try {
+        const raw = localStorage.getItem(PIPELINE_KEY);
+        if (!raw) {
+          state.pipeline = [];
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          state.pipeline = [];
+          return;
+        }
+        const yFallback = new Date().getFullYear();
+        state.pipeline = parsed
+          .map((item) => normalizePipelineItem(item, yFallback))
+          .filter(Boolean);
+      } catch (err) {
+        console.warn("Could not parse pipeline", err);
+        state.pipeline = [];
+      }
+    }
+
+    function savePipeline() {
+      try {
+        localStorage.setItem(PIPELINE_KEY, JSON.stringify(state.pipeline));
+      } catch (err) {
+        console.warn("Could not save pipeline", err);
+      }
+    }
+
+    function loadSavedTrips() {
+      try {
+        const raw = localStorage.getItem(SAVED_TRIPS_KEY);
+        if (!raw) {
+          state.savedTrips = [];
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          state.savedTrips = [];
+          return;
+        }
+        const yFallback = new Date().getFullYear();
+        state.savedTrips = parsed.map((item) => normalizeTripEntry(item, yFallback)).filter(Boolean);
+      } catch (err) {
+        console.warn("Could not parse saved trips", err);
+        state.savedTrips = [];
+      }
+    }
+
+    function saveSavedTrips() {
+      try {
+        localStorage.setItem(SAVED_TRIPS_KEY, JSON.stringify(state.savedTrips));
+      } catch (err) {
+        console.warn("Could not save saved trips", err);
+      }
+    }
+
+    function findRowByConferenceName(name) {
+      const n = normalize(name);
+      if (!n) return null;
+      return state.rows.find((r) => normalize(r.conference_name) === n) || null;
+    }
+
+    function isInPipeline(name) {
+      const n = normalize(name);
+      return state.pipeline.some((p) => normalize(p.name) === n);
+    }
+
+    function isSavedTrip(name) {
+      const n = normalize(name);
+      return state.savedTrips.some((s) => normalize(s.name) === n);
+    }
+
+    function addToPipeline(name) {
+      const n = normalize(name);
+      if (!n || isInPipeline(n)) return;
+      const row = findRowByConferenceName(n);
+      const y = planningYearFromRow(row);
+      state.pipeline.push({ name: n, status: "watching", planningYear: y, pipePlan: PIPE_PLAN.active });
+      savePipeline();
+      renderMyPanels();
+    }
+
+    function removeFromPipeline(name) {
+      const n = normalize(name);
+      state.pipeline = state.pipeline.filter((p) => normalize(p.name) !== n);
+      savePipeline();
+      renderMyPanels();
+    }
+
+    function setPipelineStatus(name, status) {
+      const n = normalize(name);
+      const item = state.pipeline.find((p) => normalize(p.name) === n);
+      if (!item) return;
+      let st = normalize(status).toLowerCase() || "watching";
+      if (!PIPELINE_STATUSES.some((s) => s.value === st)) st = "watching";
+      item.status = st;
+      savePipeline();
+    }
+
+    function setPipelinePlanningYear(name, year) {
+      const n = normalize(name);
+      const item = state.pipeline.find((p) => normalize(p.name) === n);
+      if (!item) return;
+      const y = Number(year);
+      if (!Number.isFinite(y) || y < 2000 || y > 2100) return;
+      item.planningYear = y;
+      savePipeline();
+      renderMyPanels();
+      refreshConferenceDetailIfOpen();
+    }
+
+    function setPipePlan(name, plan) {
+      const n = normalize(name);
+      const item = state.pipeline.find((p) => normalize(p.name) === n);
+      if (!item) return;
+      let p = normalize(plan).toLowerCase();
+      if (!Object.values(PIPE_PLAN).includes(p)) p = PIPE_PLAN.active;
+      item.pipePlan = p;
+      savePipeline();
+      renderMyPanels();
+      refreshConferenceDetailIfOpen();
+    }
+
+    function addSavedTrip(name) {
+      const n = normalize(name);
+      if (!n || isSavedTrip(n)) return;
+      const row = findRowByConferenceName(n);
+      const y = planningYearFromRow(row);
+      state.savedTrips.push({ name: n, planningYear: y, tripPlan: TRIP_PLAN.planning });
+      saveSavedTrips();
+      renderMyPanels();
+    }
+
+    function setTripPlanningYear(name, year) {
+      const n = normalize(name);
+      const item = state.savedTrips.find((t) => normalize(t.name) === n);
+      if (!item) return;
+      const y = Number(year);
+      if (!Number.isFinite(y) || y < 2000 || y > 2100) return;
+      item.planningYear = y;
+      saveSavedTrips();
+      renderMyPanels();
+      refreshConferenceDetailIfOpen();
+    }
+
+    function setTripPlan(name, plan) {
+      const n = normalize(name);
+      const item = state.savedTrips.find((t) => normalize(t.name) === n);
+      if (!item) return;
+      let p = normalize(plan).toLowerCase();
+      if (!Object.values(TRIP_PLAN).includes(p)) p = TRIP_PLAN.planning;
+      item.tripPlan = p;
+      saveSavedTrips();
+      renderMyPanels();
+      refreshConferenceDetailIfOpen();
+    }
+
+    function removeSavedTrip(name) {
+      const n = normalize(name);
+      state.savedTrips = state.savedTrips.filter((s) => normalize(s.name) !== n);
+      saveSavedTrips();
+      renderMyPanels();
+    }
+
+    function loadFavorites() {
+      try {
+        const raw = localStorage.getItem(FAVORITES_KEY);
+        if (!raw) {
+          state.favorites = [];
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        state.favorites = Array.isArray(parsed) ? parsed.map((x) => normalize(x)).filter(Boolean) : [];
+      } catch (err) {
+        console.warn("Could not parse favorites", err);
+        state.favorites = [];
+      }
+    }
+
+    function saveFavorites() {
+      try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(state.favorites));
+      } catch (err) {
+        console.warn("Could not save favorites", err);
+      }
+    }
+
+    function isFavorite(name) {
+      const n = normalize(name);
+      return state.favorites.some((x) => normalize(x) === n);
+    }
+
+    function toggleFavorite(name) {
+      const n = normalize(name);
+      if (!n) return;
+      const idx = state.favorites.findIndex((x) => normalize(x) === n);
+      if (idx >= 0) state.favorites.splice(idx, 1);
+      else state.favorites.push(n);
+      saveFavorites();
+    }
+
+    function loadNotes() {
+      try {
+        const raw = localStorage.getItem(NOTES_KEY);
+        if (!raw) {
+          state.notes = {};
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        state.notes = parsed && typeof parsed === "object" ? parsed : {};
+      } catch (err) {
+        console.warn("Could not parse notes", err);
+        state.notes = {};
+      }
+    }
+
+    function saveNotesObject() {
+      try {
+        localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
+      } catch (err) {
+        console.warn("Could not save notes", err);
+      }
+    }
+
+    function setNoteForConference(name, text) {
+      const n = normalize(name);
+      if (!n) return;
+      const t = normalize(text);
+      if (!t) {
+        delete state.notes[n];
+      } else {
+        state.notes[n] = t.slice(0, 8000);
+      }
+      saveNotesObject();
+    }
+
+    function csvEscapeCell(value) {
+      const s = normalize(value).replace(/"/g, '""');
+      return `"${s}"`;
+    }
+
+    function exportFilteredCsv() {
+      readFilterValues();
+      const rows = sortRows(getFilteredRows());
+      const headerRow = CSV_EXPORT_KEYS.map((k) => csvEscapeCell(k))
+        .concat(csvEscapeCell("your_notes"))
+        .join(",");
+      const lines = [`\ufeff${headerRow}`];
+      rows.forEach((r) => {
+        const n = normalize(r.conference_name);
+        const cells = CSV_EXPORT_KEYS.map((k) => csvEscapeCell(r[k] || ""));
+        cells.push(csvEscapeCell(state.notes[n] || ""));
+        lines.push(cells.join(","));
+      });
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `conference-tracker-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function copyViewLinkToClipboard() {
+      readFilterValues();
+      saveFilters();
+      syncFiltersToUrl();
+      const url = window.location.href;
+      const done = () => {
+        if (el.conferenceDetailHint && el.conferenceDetailDialog?.open) {
+          el.conferenceDetailHint.textContent = "Link copied to clipboard.";
+        } else if (el.backupStatus) {
+          el.backupStatus.textContent = "Link copied to clipboard.";
+          el.backupStatus.classList.remove("backup-status-error");
+        }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(() => {
+          window.prompt("Copy this link:", url);
+        });
+      } else {
+        window.prompt("Copy this link:", url);
+      }
+    }
+
+    function escapeIcsText(value) {
+      return normalize(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+        .replace(/\n/g, "\\n");
+    }
+
+    function formatIcsDateOnly(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
+    }
+
+    function buildVEventLines(row) {
+      const info = getNextDeadlineInfo(row);
+      if (!info || !info.deadlineDate) return null;
+      const name = normalize(row.conference_name);
+      const uidBase = `${name}-${formatIcsDateOnly(info.deadlineDate)}`.replace(/[^a-zA-Z0-9@._-]/g, "-");
+      const stamp = formatIcsDateOnly(new Date());
+      const dt = formatIcsDateOnly(info.deadlineDate);
+      const sum = escapeIcsText(`${info.label} deadline: ${name}`);
+      const city = normalize(row.city);
+      const country = normalize(row.country);
+      const locLine = city || country ? `LOCATION:${escapeIcsText(`${city}${city && country ? ", " : ""}${country}`)}` : "";
+      const site = normalize(row.website_or_cfp_link);
+      const userNote = state.notes[name];
+      const descParts = [];
+      if (site) descParts.push(`Site: ${site}`);
+      if (userNote) descParts.push(`Notes: ${userNote}`);
+      const descLine = descParts.length ? `DESCRIPTION:${escapeIcsText(descParts.join(" | "))}` : "";
+      return [
+        "BEGIN:VEVENT",
+        `UID:${uidBase}@conference-tracker.local`,
+        `DTSTAMP:${stamp}T120000Z`,
+        `DTSTART;VALUE=DATE:${dt}`,
+        `SUMMARY:${sum}`,
+        locLine,
+        descLine,
+        "END:VEVENT"
+      ].filter((line) => Boolean(line));
+    }
+
+    function buildIcsForConference(row) {
+      const ve = buildVEventLines(row);
+      if (!ve) return null;
+      return [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//ConferenceTracker//EN",
+        "CALSCALE:GREGORIAN",
+        ...ve,
+        "END:VCALENDAR"
+      ].join("\r\n");
+    }
+
+    function buildMergedIcsFromRows(rows) {
+      const chunks = [];
+      rows.forEach((row) => {
+        const ve = buildVEventLines(row);
+        if (ve) chunks.push(...ve);
+      });
+      if (chunks.length === 0) return null;
+      return [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//ConferenceTracker//EN",
+        "CALSCALE:GREGORIAN",
+        ...chunks,
+        "END:VCALENDAR"
+      ].join("\r\n");
+    }
+
+    function downloadTextFile(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadIcsForConference(row) {
+      const ics = buildIcsForConference(row);
+      if (!ics) {
+        window.alert("There is no upcoming deadline to add to your calendar (TBD or N/A).");
+        return;
+      }
+      const safe = normalize(row.conference_name).replace(/[^\w\-]+/g, "_").slice(0, 80);
+      downloadTextFile(ics, `${safe || "deadline"}.ics`, "text/calendar;charset=utf-8");
+    }
+
+    function exportPipelineCsv() {
+      const headerCells = ["pipeline_status", "planning_year", "pipe_plan"]
+        .concat(CSV_EXPORT_KEYS)
+        .concat(["your_notes"])
+        .map((k) => csvEscapeCell(k));
+      const lines = [`\ufeff${headerCells.join(",")}`];
+      state.pipeline.forEach((item) => {
+        const n = normalize(item.name);
+        const row = findRowByConferenceName(n);
+        const status = normalize(item.status) || "watching";
+        const cells = [
+          csvEscapeCell(status),
+          csvEscapeCell(String(item.planningYear ?? "")),
+          csvEscapeCell(item.pipePlan || PIPE_PLAN.active)
+        ];
+        CSV_EXPORT_KEYS.forEach((k) => {
+          cells.push(csvEscapeCell(row ? row[k] || "" : ""));
+        });
+        cells.push(csvEscapeCell(state.notes[n] || ""));
+        lines.push(cells.join(","));
+      });
+      downloadTextFile(lines.join("\n"), `pipeline-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
+      setFooterStatus("Pipeline CSV downloaded.");
+    }
+
+    function exportTripsCsv() {
+      const headerCells = ["planning_year", "trip_plan"]
+        .concat(CSV_EXPORT_KEYS)
+        .concat(["your_notes"])
+        .map((k) => csvEscapeCell(k));
+      const lines = [`\ufeff${headerCells.join(",")}`];
+      state.savedTrips.forEach((item) => {
+        const n = normalize(item.name);
+        const row = findRowByConferenceName(n);
+        const cells = [csvEscapeCell(String(item.planningYear ?? "")), csvEscapeCell(item.tripPlan || TRIP_PLAN.planning)];
+        CSV_EXPORT_KEYS.forEach((k) => {
+          cells.push(csvEscapeCell(row ? row[k] || "" : ""));
+        });
+        cells.push(csvEscapeCell(state.notes[n] || ""));
+        lines.push(cells.join(","));
+      });
+      downloadTextFile(lines.join("\n"), `saved-trips-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
+      setFooterStatus("Trips CSV downloaded.");
+    }
+
+    function exportPipelineIcsBundle() {
+      const rows = state.pipeline.map((p) => findRowByConferenceName(p.name)).filter(Boolean);
+      const ics = buildMergedIcsFromRows(rows);
+      if (!ics) {
+        window.alert("No calendar dates found for pipeline items (TBD, N/A, or missing from the catalog).");
+        return;
+      }
+      downloadTextFile(ics, `pipeline-deadlines-${new Date().toISOString().slice(0, 10)}.ics`, "text/calendar;charset=utf-8");
+      setFooterStatus("Pipeline calendar file downloaded.");
+    }
+
+    function exportTripsIcsBundle() {
+      const rows = state.savedTrips.map((item) => findRowByConferenceName(item.name)).filter(Boolean);
+      const ics = buildMergedIcsFromRows(rows);
+      if (!ics) {
+        window.alert("No calendar dates found for saved trips (TBD, N/A, or missing from the catalog).");
+        return;
+      }
+      downloadTextFile(ics, `trips-deadlines-${new Date().toISOString().slice(0, 10)}.ics`, "text/calendar;charset=utf-8");
+      setFooterStatus("Trips calendar file downloaded.");
+    }
+
+    let footerStatusTimer = 0;
+    function setFooterStatus(message) {
+      if (!el.footerStatus) return;
+      window.clearTimeout(footerStatusTimer);
+      el.footerStatus.textContent = message || "";
+      if (message) {
+        footerStatusTimer = window.setTimeout(() => {
+          el.footerStatus.textContent = "";
+        }, 4500);
+      }
+    }
+
+    function openShortcutsDialog() {
+      if (el.shortcutsDialog && typeof el.shortcutsDialog.showModal === "function") {
+        try {
+          el.shortcutsDialog.showModal();
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+    }
+
+    function closeShortcutsDialog() {
+      if (el.shortcutsDialog && typeof el.shortcutsDialog.close === "function") {
+        el.shortcutsDialog.close();
+      }
+    }
+
+    const UPCOMING_DEADLINE_DAYS = 30;
+
+    function renderUpcomingStrip(container, conferenceNames) {
+      if (!container) return;
+      const entries = [];
+      conferenceNames.forEach((rawName) => {
+        const name = normalize(rawName);
+        const row = findRowByConferenceName(name);
+        if (!row) return;
+        const info = getNextDeadlineInfo(row);
+        if (!info || info.daysUntil < 0 || info.daysUntil > UPCOMING_DEADLINE_DAYS) return;
+        entries.push({
+          name,
+          daysUntil: info.daysUntil,
+          label: info.label,
+          monthDay: info.monthDay
+        });
+      });
+      entries.sort((a, b) => a.daysUntil - b.daysUntil);
+      if (entries.length === 0) {
+        container.hidden = true;
+        container.innerHTML = "";
+        return;
+      }
+      container.hidden = false;
+      container.innerHTML = `
+        <h3 class="upcoming-strip-title">≤${UPCOMING_DEADLINE_DAYS}d</h3>
+        <ul class="upcoming-strip-list">
+          ${entries
+            .map(
+              (e) =>
+                `<li><span class="upcoming-name">${escapeHtml(e.name)}</span> <span class="upcoming-meta">${escapeHtml(e.label)} ${escapeHtml(e.monthDay)} · ${e.daysUntil}d</span></li>`
+            )
+            .join("")}
+        </ul>
+      `;
+    }
+
+    function setDetailUrlParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      if (name) params.set("c", name);
+      else params.delete("c");
+      const query = params.toString();
+      const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState(null, "", nextUrl);
+    }
+
+    function fillConferenceDetail(row) {
+      const name = normalize(row.conference_name);
+      if (el.conferenceDetailTitle) el.conferenceDetailTitle.textContent = name;
+      if (el.conferenceDetailNotes) {
+        el.conferenceDetailNotes.value = state.notes[name] || "";
+      }
+      const nd = getNextDeadlineInfo(row);
+      const body = [];
+      body.push('<dl class="detail-dl">');
+      body.push(`<dt>Where</dt><dd>${escapeHtml(normalize(row.city))}, ${escapeHtml(normalize(row.country))} · ${escapeHtml(normalize(row.conference_type))}</dd>`);
+      body.push(`<dt>Dates</dt><dd>${escapeHtml(normalize(row.conference_start_date))} → ${escapeHtml(normalize(row.conference_end_date))}</dd>`);
+      if (!isAttendeeMode()) {
+        body.push(`<dt>CfP mo.</dt><dd>${escapeHtml(normalize(row.cfp_deadline_month))}</dd>`);
+        body.push(`<dt>Tracks</dt><dd>${escapeHtml(normalize(row.submission_tracks))}</dd>`);
+        body.push(`<dt>Due</dt><dd>${nd ? `${escapeHtml(nd.label)} ${escapeHtml(nd.monthDay)} (${nd.daysUntil}d)` : "—"}</dd>`);
+      }
+      const linkParts = [];
+      if (normalize(row.website_or_cfp_link)) {
+        linkParts.push(`<a href="${escapeHtml(row.website_or_cfp_link)}" target="_blank" rel="noopener noreferrer">Site</a>`);
+      }
+      if (!isAttendeeMode()) {
+        if (normalize(row.cft_link)) {
+          linkParts.push(`<a href="${escapeHtml(row.cft_link)}" target="_blank" rel="noopener noreferrer">CfT</a>`);
+        }
+        if (normalize(row.cfw_link)) {
+          linkParts.push(`<a href="${escapeHtml(row.cfw_link)}" target="_blank" rel="noopener noreferrer">CfW</a>`);
+        }
+        if (normalize(row.cfv_link)) {
+          linkParts.push(`<a href="${escapeHtml(row.cfv_link)}" target="_blank" rel="noopener noreferrer">CfV</a>`);
+        }
+      }
+      if (linkParts.length) {
+        body.push(`<dt>Links</dt><dd class="detail-links">${linkParts.join(" · ")}</dd>`);
+      }
+      body.push("</dl>");
+      if (state.personaMode === "attendee" && getTripEntry(name)) {
+        const te = getTripEntry(name);
+        const encPlan = encodeURIComponent(name);
+        body.push(`<div class="detail-planning-block">
+          <h3 class="detail-planning-block-title">Trip</h3>
+          <div class="detail-planning-row"><span class="detail-planning-label">Year</span>${yearSelectHtml(te.planningYear, "data-trip-year", encPlan)}</div>
+          <div class="detail-planning-row"><span class="detail-planning-label">Status</span>${tripPlanSelectHtml(te.tripPlan, encPlan)}</div>
+        </div>`);
+      }
+      if (state.personaMode === "speaker" && getPipelineEntry(name)) {
+        const pe = getPipelineEntry(name);
+        const encPlan = encodeURIComponent(name);
+        body.push(`<div class="detail-planning-block">
+          <h3 class="detail-planning-block-title">Pipeline</h3>
+          <div class="detail-planning-row"><span class="detail-planning-label">Year</span>${yearSelectHtml(pe.planningYear, "data-pipeline-year", encPlan)}</div>
+          <div class="detail-planning-row"><span class="detail-planning-label">Plan</span>${pipePlanSelectHtml(pe.pipePlan, encPlan)}</div>
+        </div>`);
+      }
+      if (el.conferenceDetailBody) el.conferenceDetailBody.innerHTML = body.join("");
+
+      const enc = encodeURIComponent(name);
+      const parts = [];
+      function detailBtn(action, icon, label) {
+        return `<button type="button" class="detail-action-btn btn-with-icon btn-icon-only" data-detail-action="${action}" data-cname="${enc}"${tipDataAttr(label)} aria-label="${escapeHtml(label)}">${icon}<span class="visually-hidden">${escapeHtml(label)}</span></button>`;
+      }
+      if (state.personaMode === "speaker") {
+        parts.push(
+          isInPipeline(name)
+            ? detailBtn("pipeline-remove", ICON.remove, "Remove from pipeline")
+            : detailBtn("pipeline-add", ICON.clipboard, "Add to pipeline")
+        );
+      } else if (state.personaMode === "attendee") {
+        parts.push(
+          isSavedTrip(name)
+            ? detailBtn("saved-remove", ICON.remove, "Remove from trips")
+            : detailBtn("saved-add", ICON.place, "Save to trips")
+        );
+      }
+      parts.push(
+        detailBtn("fav-toggle", isFavorite(name) ? ICON.star : ICON.starOutline, isFavorite(name) ? "Remove favorite" : "Add favorite")
+      );
+      parts.push(
+        `<button type="button" class="detail-action-btn btn-with-icon btn-icon-only" data-detail-action="ics" data-cname="${enc}"${tipDataAttr("Add to calendar")} aria-label="Add to calendar"${!nd ? " disabled" : ""}>${ICON.calendar}<span class="visually-hidden">Add to calendar</span></button>`
+      );
+      parts.push(detailBtn("copy-conf-link", ICON.link, "Copy link"));
+      if (el.conferenceDetailToolbar) el.conferenceDetailToolbar.innerHTML = parts.join(" ");
+
+      if (el.conferenceDetailHint) {
+        el.conferenceDetailHint.hidden = false;
+      }
+    }
+
+    function openConferenceDetail(row, options) {
+      const skipUrl = options && options.skipUrl;
+      state.detailConferenceName = normalize(row.conference_name);
+      fillConferenceDetail(row);
+      if (!skipUrl) setDetailUrlParam(state.detailConferenceName);
+      if (el.conferenceDetailDialog && typeof el.conferenceDetailDialog.showModal === "function") {
+        try {
+          el.conferenceDetailDialog.showModal();
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+    }
+
+    function closeConferenceDetail() {
+      if (el.conferenceDetailDialog && el.conferenceDetailDialog.open) {
+        el.conferenceDetailDialog.close();
+      }
+    }
+
+    function refreshConferenceDetailIfOpen() {
+      if (!state.detailConferenceName || !el.conferenceDetailDialog?.open) return;
+      const row = findRowByConferenceName(state.detailConferenceName);
+      if (row) fillConferenceDetail(row);
+      else closeConferenceDetail();
+    }
+
+    function tryOpenDetailFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.has("c")) return;
+      const name = normalize(params.get("c"));
+      if (!name) {
+        params.delete("c");
+        const q = params.toString();
+        window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
+        return;
+      }
+      const row = findRowByConferenceName(name);
+      if (row) openConferenceDetail(row, { skipUrl: true });
+      else {
+        params.delete("c");
+        const q = params.toString();
+        window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
+      }
+    }
+
+    function maybeApplySpeakerDiscoverDefaults() {
+      if (state.personaMode !== "speaker") return;
+      try {
+        if (localStorage.getItem(STORAGE_KEY)) return;
+      } catch (err) {
+        console.warn(err);
+      }
+      const params = new URLSearchParams(window.location.search);
+      const filterKeys = new Set(Object.keys(defaultFilters()));
+      const hasUrlFilters = [...params.keys()].some((k) => filterKeys.has(k));
+      if (hasUrlFilters) return;
+      state.filters = speakerPresetFilters();
+    }
+
+    function isGenericDefaultFilters() {
+      const f = state.filters;
+      const d = defaultFilters();
+      const extraKeys = ["region", "actionableCfp", "industryTalks", "inPipeline"];
+      for (const key of Object.keys(d)) {
+        if (key === "sortBy") {
+          if (normalize(f.sortBy) && normalize(f.sortBy) !== normalize(d.sortBy) && f.sortBy !== "deadline_soon") {
+            return false;
+          }
+          continue;
+        }
+        if (normalize(f[key]) !== normalize(d[key])) return false;
+      }
+      return extraKeys.every((key) => !normalize(f[key]));
+    }
+
+    function setPersonaMode(mode) {
+      if (!["speaker", "attendee"].includes(mode)) return;
+      const prevMode = state.personaMode;
+      state.personaMode = mode;
+      if (mode === "attendee" && prevMode !== "attendee") {
+        clearSpeakerOnlyFilters();
+        applyFilterValuesToInputs();
+      }
+      if (mode === "speaker" && prevMode !== "speaker" && isGenericDefaultFilters()) {
+        state.filters = speakerPresetFilters();
+        state.headerSort = { key: "", direction: "asc" };
+        applyFilterValuesToInputs();
+      }
+      if (
+        state.appSection !== "discover" &&
+        state.appSection !== "settings" &&
+        state.appSection !== mode
+      ) {
+        state.appSection = mode;
+        saveAppSection();
+      }
+      savePersonaMode();
+      if (el.personaSelect) el.personaSelect.value = mode;
+      updatePersonaHint();
+      applyAppSectionUI();
+      rerender();
+    }
+
+    function updatePersonaHint() {
+      if (!el.personaHint) return;
+      const hints = {
+        speaker: "",
+        attendee: ""
+      };
+      el.personaHint.textContent = hints[state.personaMode] || "";
+    }
+
+    function applyPrimaryNavModel() {
+      const isMobile = isSmallScreen();
+      const buttons = [
+        { key: "discover", btn: el.appViewDiscover, label: "Discover" },
+        { key: "speaker", btn: el.appViewSpeaker, label: "Pipeline" },
+        { key: "attendee", btn: el.appViewAttendee, label: "Trips" },
+        { key: "settings", btn: el.appViewSettings, label: "Settings" }
+      ];
+      const alwaysVisible = new Set(["discover", "settings"]);
+      if (!isMobile) {
+        buttons.forEach(({ key, btn, label }) => {
+          if (!btn) return;
+          btn.hidden = false;
+          const span = btn.querySelector("span");
+          if (span) span.textContent = label;
+        });
+        return;
+      }
+      const personaSection = state.personaMode;
+      buttons.forEach(({ key, btn }) => {
+        if (!btn) return;
+        if (alwaysVisible.has(key)) {
+          btn.hidden = false;
+          return;
+        }
+        btn.hidden = key !== personaSection;
+      });
+      const personaButton = buttons.find((entry) => entry.key === personaSection)?.btn;
+      if (personaButton) {
+        const span = personaButton.querySelector("span");
+        if (span) span.textContent = "My area";
+      }
+    }
+
+    function applyAppSectionUI() {
+      if (
+        isSmallScreen() &&
+        state.appSection !== "discover" &&
+        state.appSection !== "settings" &&
+        state.appSection !== state.personaMode
+      ) {
+        state.appSection = state.personaMode;
+        saveAppSection();
+      }
+      const section = state.appSection;
+      const map = {
+        discover: el.sectionDiscover,
+        speaker: el.sectionSpeaker,
+        attendee: el.sectionAttendee,
+        settings: el.sectionSettings
+      };
+      Object.entries(map).forEach(([key, node]) => {
+        if (!node) return;
+        node.hidden = key !== section;
+      });
+      document.querySelectorAll(".app-view-nav button[data-app-section]").forEach((btn) => {
+        const match = btn.getAttribute("data-app-section") === section;
+        btn.classList.toggle("active", match);
+        btn.setAttribute("aria-current", match ? "page" : "false");
+      });
+      applyPrimaryNavModel();
+      if (section === "speaker" || section === "attendee") {
+        renderMyPanels();
+      }
+      if (section === "discover") {
+        updateMapIfVisible();
+      }
+      const showSpeakerQuick =
+        state.personaMode === "speaker" && section === "discover";
+      if (el.discoverQuickActions) el.discoverQuickActions.hidden = !showSpeakerQuick;
+    }
+
+    function setAppSection(section) {
+      if (!["discover", "speaker", "attendee", "settings"].includes(section)) return;
+      if (
+        isSmallScreen() &&
+        section !== "discover" &&
+        section !== "settings" &&
+        section !== state.personaMode
+      ) {
+        section = state.personaMode;
+      }
+      state.appSection = section;
+      saveAppSection();
+      applyAppSectionUI();
+      syncFiltersToUrl();
+    }
+
+    function moveFocusInButtonList(container, current, direction) {
+      if (!container || !current) return;
+      const buttons = [...container.querySelectorAll("button:not([hidden])")];
+      if (!buttons.length) return;
+      const idx = buttons.indexOf(current);
+      if (idx === -1) return;
+      const next = buttons[(idx + direction + buttons.length) % buttons.length];
+      next.focus();
+    }
+
+    function rowActionButton(action, enc, iconHtml, label, title) {
+      const tip = title || label;
+      return `<button type="button" class="table-action-btn btn-with-icon btn-icon-only" data-action="${escapeHtml(action)}" data-cname="${enc}"${tipDataAttr(tip)} aria-label="${escapeHtml(tip)}">${iconHtml}<span class="visually-hidden">${escapeHtml(label)}</span></button>`;
+    }
+
+    function renderRowActions(row) {
+      const name = normalize(row.conference_name);
+      const enc = encodeURIComponent(name);
+      if (state.personaMode === "speaker") {
+        if (isInPipeline(name)) {
+          return rowActionButton("pipeline-remove", enc, ICON.remove, "Remove", "Remove from pipeline");
+        }
+        return rowActionButton("pipeline-add", enc, ICON.clipboard, "Add", "Add to pipeline");
+      }
+      if (state.personaMode === "attendee") {
+        if (isSavedTrip(name)) {
+          return rowActionButton("saved-remove", enc, ICON.remove, "Remove", "Remove from trips");
+        }
+        return rowActionButton("saved-add", enc, ICON.place, "Save", "Save to trips");
+      }
+      return "—";
+    }
+
+    function renderPipelineStatusOptions(current) {
+      let cur = normalize(current).toLowerCase() || "watching";
+      if (!PIPELINE_STATUSES.some((s) => s.value === cur)) cur = "watching";
+      return PIPELINE_STATUSES.map((s) => {
+        const sel = s.value === cur ? " selected" : "";
+        return `<option value="${escapeHtml(s.value)}"${sel}>${escapeHtml(s.label)}</option>`;
+      }).join("");
+    }
+
+    function renderMyPanels() {
+      syncPlanningFilterControls();
+      renderMySpeakerPanel();
+      renderMyTripsPanel();
+    }
+
+    function renderMySpeakerPanel() {
+      if (!el.mySpeakerEmpty || !el.mySpeakerList) return;
+      if (state.pipeline.length === 0) {
+        el.mySpeakerEmpty.textContent =
+          "No pipeline items yet. On Discover, use Add on a conference row.";
+        el.mySpeakerEmpty.hidden = false;
+        el.mySpeakerList.hidden = true;
+        el.mySpeakerList.innerHTML = "";
+        if (el.myPipelineToolbar) el.myPipelineToolbar.hidden = true;
+        if (el.pipelineUpcoming) {
+          el.pipelineUpcoming.hidden = true;
+          el.pipelineUpcoming.innerHTML = "";
+        }
+        return;
+      }
+      const filtered = getFilteredPipeline();
+      if (filtered.length === 0) {
+        el.mySpeakerEmpty.textContent =
+          "No pipeline items for this year. Change the year filter or add conferences from Discover.";
+        el.mySpeakerEmpty.hidden = false;
+        el.mySpeakerList.hidden = true;
+        el.mySpeakerList.innerHTML = "";
+        if (el.myPipelineToolbar) el.myPipelineToolbar.hidden = false;
+        if (el.pipelineUpcoming) {
+          el.pipelineUpcoming.hidden = true;
+          el.pipelineUpcoming.innerHTML = "";
+        }
+        return;
+      }
+      el.mySpeakerEmpty.innerHTML = "";
+      el.mySpeakerEmpty.hidden = true;
+      el.mySpeakerList.hidden = false;
+      if (el.myPipelineToolbar) el.myPipelineToolbar.hidden = false;
+      renderUpcomingStrip(el.pipelineUpcoming, filtered.map((p) => p.name));
+      const rowsHtml = filtered
+        .map((item) => {
+          const row = findRowByConferenceName(item.name);
+          const nd = row ? renderNextDeadline(row) : "—";
+          const city = row ? `${escapeHtml(normalize(row.city))}, ${escapeHtml(normalize(row.country))}` : "— (not in current data)";
+          const enc = encodeURIComponent(item.name);
+          return `
+          <tr>
+            <td>${ellipsisCell(item.name)}</td>
+            <td>${city}</td>
+            <td class="my-nd-cell">${nd}</td>
+            <td class="my-plan-cell">${yearSelectHtml(item.planningYear, "data-pipeline-year", enc)}</td>
+            <td>
+              <select class="pipeline-status-select" data-pipeline-status data-cname="${enc}" aria-label="Submission status for ${escapeHtml(item.name)}">
+                ${renderPipelineStatusOptions(item.status)}
+              </select>
+            </td>
+            <td class="my-plan-cell">${pipePlanSelectHtml(item.pipePlan, enc)}</td>
+            <td>
+              <button type="button" class="table-action-btn btn-with-icon btn-icon-only" data-action="pipeline-remove" data-cname="${enc}"${tipDataAttr("Remove from pipeline")} aria-label="Remove from pipeline">${ICON.remove}<span class="visually-hidden">Remove</span></button>
+            </td>
+          </tr>
+        `;
+        })
+        .join("");
+      el.mySpeakerList.innerHTML = `
+        <table class="my-area-table">
+          <thead>
+            <tr>
+              <th scope="col">Event</th>
+              <th scope="col">Where</th>
+              <th scope="col">Due</th>
+              <th scope="col">Year</th>
+              <th scope="col">Status</th>
+              <th scope="col">Plan</th>
+              <th scope="col" aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function renderMyTripsPanel() {
+      if (!el.myTripsEmpty || !el.myTripsList) return;
+      if (state.savedTrips.length === 0) {
+        el.myTripsEmpty.textContent =
+          "No saved trips yet. On Discover, use Save on a conference row.";
+        el.myTripsEmpty.hidden = false;
+        el.myTripsList.hidden = true;
+        el.myTripsList.innerHTML = "";
+        if (el.myTripsToolbar) el.myTripsToolbar.hidden = true;
+        if (el.tripsUpcoming) {
+          el.tripsUpcoming.hidden = true;
+          el.tripsUpcoming.innerHTML = "";
+        }
+        return;
+      }
+      const filtered = getFilteredTrips();
+      if (filtered.length === 0) {
+        el.myTripsEmpty.textContent =
+          "No trips for this year. Change the year filter or save conferences from Discover.";
+        el.myTripsEmpty.hidden = false;
+        el.myTripsList.hidden = true;
+        el.myTripsList.innerHTML = "";
+        if (el.myTripsToolbar) el.myTripsToolbar.hidden = false;
+        if (el.tripsUpcoming) {
+          el.tripsUpcoming.hidden = true;
+          el.tripsUpcoming.innerHTML = "";
+        }
+        return;
+      }
+      el.myTripsEmpty.innerHTML = "";
+      el.myTripsEmpty.hidden = true;
+      el.myTripsList.hidden = false;
+      if (el.myTripsToolbar) el.myTripsToolbar.hidden = false;
+      renderUpcomingStrip(el.tripsUpcoming, filtered.map((t) => t.name));
+      const rowsHtml = filtered
+        .map((item) => {
+          const row = findRowByConferenceName(item.name);
+          const nd = row ? renderNextDeadline(row) : "—";
+          const city = row
+            ? `${escapeHtml(normalize(row.city))}, ${escapeHtml(normalize(row.country))}`
+            : "— (not in current data)";
+          const enc = encodeURIComponent(item.name);
+          return `
+          <tr>
+            <td>${ellipsisCell(item.name)}</td>
+            <td>${city}</td>
+            <td class="my-nd-cell">${nd}</td>
+            <td class="my-plan-cell">${yearSelectHtml(item.planningYear, "data-trip-year", enc)}</td>
+            <td class="my-plan-cell">${tripPlanSelectHtml(item.tripPlan, enc)}</td>
+            <td>
+              <button type="button" class="table-action-btn btn-with-icon btn-icon-only" data-action="saved-remove" data-cname="${enc}"${tipDataAttr("Remove from trips")} aria-label="Remove from trips">${ICON.remove}<span class="visually-hidden">Remove</span></button>
+            </td>
+          </tr>
+        `;
+        })
+        .join("");
+      el.myTripsList.innerHTML = `
+        <table class="my-area-table">
+          <thead>
+            <tr>
+              <th scope="col">Event</th>
+              <th scope="col">Where</th>
+              <th scope="col">Due</th>
+              <th scope="col">Year</th>
+              <th scope="col">Trip</th>
+              <th scope="col" aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function openOnboardingIfNeeded() {
+      if (!el.onboardingDialog) return;
+      try {
+        if (localStorage.getItem(ONBOARDING_KEY) === "1") return;
+      } catch (err) {
+        return;
+      }
+      const radios = el.onboardingDialog.querySelectorAll('input[name="onboardingPersona"]');
+      radios.forEach((r) => {
+        r.checked = r.value === state.personaMode;
+      });
+      if (typeof el.onboardingDialog.showModal === "function") {
+        try {
+          el.onboardingDialog.showModal();
+        } catch (err) {
+          console.warn("Could not open onboarding dialog", err);
+        }
+      }
+    }
+
+    function completeOnboarding() {
+      const form = el.onboardingDialog?.querySelector('input[name="onboardingPersona"]:checked');
+      const val = form?.value;
+      if (val && ["speaker", "attendee"].includes(val)) {
+        setPersonaMode(val);
+      }
+      try {
+        localStorage.setItem(ONBOARDING_KEY, "1");
+      } catch (err) {
+        console.warn("Could not persist onboarding flag", err);
+      }
+      if (el.onboardingDialog && typeof el.onboardingDialog.close === "function") {
+        el.onboardingDialog.close();
+      }
+      rerender();
+      window.setTimeout(() => tryOpenDetailFromUrl(), 100);
+    }
+
+    function setBackupStatus(message, isError) {
+      if (!el.backupStatus) return;
+      el.backupStatus.textContent = message || "";
+      el.backupStatus.classList.toggle("backup-status-error", Boolean(isError));
+    }
+
+    function collectStorageSnapshot() {
+      const storage = {};
+      KNOWN_STORAGE_KEYS.forEach((k) => {
+        const v = localStorage.getItem(k);
+        if (v !== null) storage[k] = v;
+      });
+      return storage;
+    }
+
+    function validateBackupPayload(data) {
+      if (!data || typeof data !== "object") return false;
+      if (data.app !== "ConferenceTracker") return false;
+      if (!data.storage || typeof data.storage !== "object") return false;
+      return true;
+    }
+
+    function stringifyStorageValue(v) {
+      if (v === null || v === undefined) return null;
+      if (typeof v === "string") return v;
+      try {
+        return JSON.stringify(v);
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function exportStorageBackup() {
+      setBackupStatus("");
+      const storage = collectStorageSnapshot();
+      const payload = {
+        version: BACKUP_FORMAT_VERSION,
+        exportedAt: new Date().toISOString(),
+        app: "ConferenceTracker",
+        storage
+      };
+      const text = JSON.stringify(payload, null, 2);
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `conference-tracker-backup-${stamp}.json`;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBackupStatus(`Backup downloaded (${Object.keys(storage).length} items).`);
+    }
+
+    function applyImportedStorage(data) {
+      const incoming = data.storage;
+      KNOWN_STORAGE_KEYS.forEach((k) => {
+        if (Object.prototype.hasOwnProperty.call(incoming, k)) {
+          const raw = incoming[k];
+          if (raw === null || raw === undefined) {
+            localStorage.removeItem(k);
+          } else {
+            const str = stringifyStorageValue(raw);
+            if (str !== null) localStorage.setItem(k, str);
+            else localStorage.removeItem(k);
+          }
+        } else {
+          localStorage.removeItem(k);
+        }
+      });
+    }
+
+    async function importStorageFromFile(file) {
+      setBackupStatus("");
+      let text;
+      try {
+        text = await file.text();
+      } catch (err) {
+        console.warn(err);
+        setBackupStatus("Could not read file.", true);
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        setBackupStatus("Invalid JSON file.", true);
+        return;
+      }
+      if (!validateBackupPayload(data)) {
+        setBackupStatus("Invalid backup: expected app \"ConferenceTracker\" and a storage object.", true);
+        return;
+      }
+      if (typeof data.version === "number" && data.version > BACKUP_FORMAT_VERSION) {
+        setBackupStatus("This backup needs a newer version of the app.", true);
+        return;
+      }
+      try {
+        applyImportedStorage(data);
+      } catch (err) {
+        console.error(err);
+        setBackupStatus("Could not apply backup.", true);
+        return;
+      }
+      setBackupStatus("Backup restored. Reloading…");
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 400);
+    }
+
+    function applyTheme(theme, options) {
+      const opts = options || {};
+      const next = theme === "light" ? "light" : "dark";
+      state.theme = next;
+      document.documentElement.setAttribute("data-theme", next);
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) metaTheme.setAttribute("content", next === "light" ? "#f4f7f5" : "#050707");
+      if (el.themeToggle) {
+        const isLight = next === "light";
+        el.themeToggle.setAttribute("aria-pressed", isLight ? "true" : "false");
+        el.themeToggle.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+        const iconLight = el.themeToggle.querySelector(".theme-icon-light");
+        const iconDark = el.themeToggle.querySelector(".theme-icon-dark");
+        if (iconLight) iconLight.hidden = isLight;
+        if (iconDark) iconDark.hidden = !isLight;
+      }
+      if (el.themeToggleText) {
+        el.themeToggleText.textContent = next === "light" ? "Dark mode" : "Light mode";
+      }
+      if (!opts.skipSave) saveUiPrefs();
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === "light" ? "dark" : "light");
+    }
+
     function saveUiPrefs() {
       const prefs = {
         activeTab: state.activeTab,
-        mapSource: state.mapSource
+        mapSource: state.mapSource,
+        theme: state.theme
       };
       localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
     }
@@ -155,9 +1767,13 @@
         if (parsed?.mapSource === "all" || parsed?.mapSource === "filtered") {
           state.mapSource = parsed.mapSource;
         }
+        if (parsed?.theme === "light" || parsed?.theme === "dark") {
+          state.theme = parsed.theme;
+        }
       } catch (err) {
         console.warn("Could not parse saved UI prefs", err);
       }
+      applyTheme(state.theme, { skipSave: true });
     }
 
     function applyFilterValuesToInputs() {
@@ -166,11 +1782,13 @@
       if (el.acceptsCfpFilter) el.acceptsCfpFilter.value = state.filters.acceptsCfp;
       if (el.acceptsCftFilter) el.acceptsCftFilter.value = state.filters.acceptsCft;
       if (el.acceptsCfwFilter) el.acceptsCfwFilter.value = state.filters.acceptsCfw;
+      if (el.acceptsCfvFilter) el.acceptsCfvFilter.value = state.filters.acceptsCfv;
       if (el.academicFilter) el.academicFilter.value = state.filters.academicLevel;
       if (el.sponsorshipFilter) el.sponsorshipFilter.value = state.filters.sponsorship;
       if (el.typeFilter) el.typeFilter.value = state.filters.conferenceType;
       if (el.monthFilter) el.monthFilter.value = state.filters.cfpMonth;
       if (el.venuePatternFilter) el.venuePatternFilter.value = state.filters.venuePattern;
+      if (el.favoritesFilter) el.favoritesFilter.value = state.filters.favoritesOnly;
       if (el.sortFilter) el.sortFilter.value = state.filters.sortBy || "attendees_name";
     }
 
@@ -211,10 +1829,12 @@
         accepts_cfp: pickValue(rawRow, ["accepts_cfp"], "Unknown"),
         accepts_cft: pickValue(rawRow, ["accepts_cft"], "Unknown"),
         accepts_cfw: pickValue(rawRow, ["accepts_cfw"], "Unknown"),
+        accepts_cfv: pickValue(rawRow, ["accepts_cfv"], "Unknown"),
         travel_accommodation_sponsorship: pickValue(rawRow, ["travel_accommodation_sponsorship"]),
         cfp_deadline: pickValue(rawRow, ["cfp_deadline", "cfp_deadline_MM-DD"], "TBD"),
         cft_deadline: pickValue(rawRow, ["cft_deadline", "cft_deadline_MM-DD"], "TBD"),
         cfw_deadline: pickValue(rawRow, ["cfw_deadline", "cfw_deadline_MM-DD"], "TBD"),
+        cfv_deadline: pickValue(rawRow, ["cfv_deadline", "cfv_deadline_MM-DD"], "TBD"),
         conference_start_date: pickValue(rawRow, ["conference_start_date"]),
         conference_end_date: pickValue(rawRow, ["conference_end_date"]),
         city: pickValue(rawRow, ["city"]),
@@ -222,6 +1842,7 @@
         website_or_cfp_link: pickValue(rawRow, ["website_or_cfp_link"]),
         cft_link: pickValue(rawRow, ["cft_link"]),
         cfw_link: pickValue(rawRow, ["cfw_link"]),
+        cfv_link: pickValue(rawRow, ["cfv_link"]),
         conference_type: pickValue(rawRow, ["conference_type"]),
         venue_pattern: pickValue(rawRow, ["venue_pattern"], "Unknown"),
         timezone: pickValue(rawRow, ["timezone"]),
@@ -285,6 +1906,7 @@
           row.accepts_cfp = sanitizeEnum(row.accepts_cfp, ["Yes", "No", "Unknown"], "Unknown");
           row.accepts_cft = sanitizeEnum(row.accepts_cft, ["Yes", "No", "Unknown"], "Unknown");
           row.accepts_cfw = sanitizeEnum(row.accepts_cfw, ["Yes", "No", "Unknown"], "Unknown");
+          row.accepts_cfv = sanitizeEnum(row.accepts_cfv, ["Yes", "No", "Unknown"], "Unknown");
           row.venue_pattern = sanitizeEnum(row.venue_pattern, ["Rotating", "Mostly Fixed", "Fixed", "Unknown"], "Unknown");
 
           if (!isValidMonthDay(row.cfp_deadline)) {
@@ -298,6 +1920,10 @@
           if (!isValidMonthDay(row.cfw_deadline)) {
             issues.push(`invalid cfw_deadline "${row.cfw_deadline}"`);
             row.cfw_deadline = "TBD";
+          }
+          if (!isValidMonthDay(row.cfv_deadline)) {
+            issues.push(`invalid cfv_deadline "${row.cfv_deadline}"`);
+            row.cfv_deadline = "TBD";
           }
 
           if (!isValidIsoDate(row.conference_start_date)) {
@@ -339,6 +1965,17 @@
         .replace(/'/g, "&#39;");
     }
 
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, "&#96;");
+    }
+
+    /** Desktop-only instant hint (no native title tooltip delay). Touch uses visible labels + aria-label. */
+    function tipDataAttr(text) {
+      const clean = normalize(text);
+      if (!clean) return "";
+      return ` data-tip="${escapeAttr(clean)}"`;
+    }
+
     function linkOrText(url) {
       const clean = normalize(url);
       if (!clean) return "";
@@ -351,7 +1988,7 @@
     function ellipsisCell(value) {
       const clean = normalize(value);
       if (!clean) return "";
-      return `<span class="cell-ellipsis" title="${escapeHtml(clean)}">${escapeHtml(clean)}</span>`;
+      return `<span class="cell-ellipsis"${tipDataAttr(clean)}>${escapeHtml(clean)}</span>`;
     }
 
     function renderTrackBadges(tracksValue) {
@@ -371,7 +2008,7 @@
         const conf = map[track];
         const label = conf ? conf.label : track.charAt(0).toUpperCase();
         const title = conf ? conf.title : track;
-        return `<span class="track-badge" title="${escapeHtml(title)}">${escapeHtml(label)}</span>`;
+        return `<span class="track-badge"${tipDataAttr(title)}>${escapeHtml(label)}</span>`;
       }).join("")}</span>`;
     }
 
@@ -379,16 +2016,42 @@
       const raw = normalize(value);
       const v = toLower(raw);
       if (v === "industry") {
-        return `<span class="acceptance-emoji" title="Industry" aria-label="Industry">👷</span>`;
+        return `<span class="acceptance-emoji" aria-label="Industry">👷</span>`;
       }
       if (v === "academic") {
-        return `<span class="acceptance-emoji" title="Academic" aria-label="Academic">🧑‍🎓</span>`;
+        return `<span class="acceptance-emoji" aria-label="Academic">🧑‍🎓</span>`;
       }
       if (v === "mixed") {
-        return `<span class="acceptance-emoji" title="Mixed (industry and academic)" aria-label="Mixed">👷🧑‍🎓</span>`;
+        return `<span class="acceptance-emoji" aria-label="Mixed industry and academic">👷🧑‍🎓</span>`;
       }
       return escapeHtml(raw || "—");
     }
+
+    const COUNTRY_REGION = {
+      europe: new Set([
+        "United Kingdom",
+        "Germany",
+        "France",
+        "Netherlands",
+        "Belgium",
+        "Switzerland",
+        "Austria",
+        "Italy",
+        "Spain",
+        "Portugal",
+        "Norway",
+        "Denmark",
+        "Poland",
+        "Romania",
+        "Luxembourg",
+        "Lithuania",
+        "Greece"
+      ]),
+      americas: new Set(["United States", "Canada", "Brazil", "Argentina", "Mexico", "Chile"]),
+      apac: new Set(["Japan", "Singapore", "India", "Australia", "Indonesia", "Nepal"]),
+      mea: new Set(["Israel", "United Arab Emirates", "Saudi Arabia", "Bahrain", "Qatar"]),
+      africa: new Set(["South Africa", "Kenya"])
+    };
 
     const countryToIso2 = {
       Argentina: "AR",
@@ -398,6 +2061,7 @@
       Belgium: "BE",
       Brazil: "BR",
       Canada: "CA",
+      Chile: "CL",
       Denmark: "DK",
       France: "FR",
       Germany: "DE",
@@ -439,14 +2103,38 @@
       if (!country || country === "TBD" || country === "Various") return "—";
       const iso2 = countryToIso2[country];
       if (!iso2) return escapeHtml(country);
-      return `<span class="country-flag" title="${escapeHtml(country)}" aria-label="${escapeHtml(country)}">${iso2ToFlagEmoji(iso2)}</span>`;
+      return `<span class="country-flag"${tipDataAttr(country)} aria-label="${escapeHtml(country)}">${iso2ToFlagEmoji(iso2)}</span>`;
+    }
+
+    function renderFavoriteCell(row) {
+      const name = normalize(row.conference_name);
+      const enc = encodeURIComponent(name);
+      const on = isFavorite(name);
+      const label = on ? "Remove from favorites" : "Add to favorites";
+      const star = on ? "★" : "☆";
+      return `<button type="button" class="fav-btn" data-action="fav-toggle" data-cname="${enc}"${tipDataAttr(label)} aria-label="${escapeHtml(label)}" aria-pressed="${on ? "true" : "false"}">${star}</button>`;
+    }
+
+    function renderNameCell(row) {
+      const name = normalize(row.conference_name);
+      const enc = encodeURIComponent(name);
+      const display = escapeHtml(name);
+      return `<button type="button" class="name-detail-btn" data-action="open-detail" data-cname="${enc}" aria-label="Open details for ${escapeHtml(name)}"><span class="cell-ellipsis">${display}</span></button>`;
+    }
+
+    function cfpDeadlineWithinDays(row, maxDays) {
+      if (normalize(row.accepts_cfp) !== "Yes") return false;
+      const days = daysUntilDeadlineForRow(row, "cfp_deadline", { rollForwardIfPast: false });
+      return days !== null && days >= 0 && days <= maxDays;
     }
 
     function renderSummary(filteredRows, allRows) {
       const total = allRows.length;
       const shown = filteredRows.length;
+      const favCount = allRows.filter((r) => isFavorite(r.conference_name)).length;
       const largeEvents = filteredRows.filter((r) => toLower(r.attendees_500_plus) === "yes").length;
       const openCfp = filteredRows.filter((r) => toLower(r.accepts_cfp) === "yes").length;
+      const actionableCfp = filteredRows.filter(isActionableCfp).length;
       const openCftOrCfw = filteredRows.filter(
         (r) => toLower(r.accepts_cft) === "yes" || toLower(r.accepts_cfw) === "yes"
       ).length;
@@ -454,34 +2142,59 @@
         (r) => normalize(r.travel_accommodation_sponsorship) === "Yes"
       ).length;
       const academic = filteredRows.filter((r) => toLower(r.academic_acceptance_level) === "academic").length;
+      const industryMixed = filteredRows.filter((r) => {
+        const lvl = normalize(r.academic_acceptance_level);
+        return lvl === "Industry" || lvl === "Mixed";
+      }).length;
       const dueSoon = filteredRows.filter((r) => {
         const info = getNextDeadlineInfo(r);
-        return info && info.daysUntil <= 30;
+        return info && info.daysUntil >= 0 && info.daysUntil <= 30;
       }).length;
+      const due14 = filteredRows.filter((r) => cfpDeadlineWithinDays(r, 14)).length;
 
-      const cards = [
-        { label: "Shown / Total", value: `${shown} / ${total}`, action: "clear", hint: "Reset to all conferences" },
-        { label: "500+ Attendees", value: `${largeEvents}`, action: "attendees_500", hint: "Large audience events" },
-        { label: "Open CfP", value: `${openCfp}`, action: "open_cfp", hint: "Accepts CfP = Yes" },
-        { label: "Open CfT / CfW", value: `${openCftOrCfw}`, action: "open_cft_or_cfw", hint: "Accepts training or workshops (either)" },
-        { label: "Travel support", value: `${travelSupport}`, action: "travel_support", hint: "Travel or accommodation sponsorship = Yes" },
-        { label: "Due <= 30 Days", value: `${dueSoon}`, action: "due_30", hint: "Nearest deadline first" },
-        { label: "Academic", value: `${academic}`, action: "academic", hint: "Academic acceptance level" }
-      ];
+      let cards;
+      if (state.personaMode === "speaker") {
+        cards = [
+          { label: "Open CfPs", value: `${actionableCfp}`, action: "actionable_cfp", hint: "CfP open, deadline still ahead" },
+          { label: "≤14d", value: `${due14}`, action: "due_14", hint: "CfP due within 14 days" },
+          { label: "Travel", value: `${travelSupport}`, action: "travel_support", hint: "Travel or hotel support" },
+          { label: "CfP", value: `${openCfp}`, action: "open_cfp", hint: "Accepts call for papers" },
+          { label: "Industry", value: `${industryMixed}`, action: "industry_talks", hint: "Industry or mixed audience" },
+          { label: "≤30d", value: `${dueSoon}`, action: "due_30", hint: "Any deadline within 30 days" },
+          { label: "Shown", value: `${shown} / ${total}`, action: "clear", hint: "Clear filters" },
+          { label: "★", value: `${favCount}`, action: "favorites_only", hint: "Show favorites only" }
+        ];
+      } else {
+        cards = [
+          { label: "Shown", value: `${shown} / ${total}`, action: "clear", hint: "Clear filters" },
+          { label: "★", value: `${favCount}`, action: "favorites_only", hint: "Show favorites only" },
+          { label: "500+", value: `${largeEvents}`, action: "attendees_500", hint: "500+ attendees" }
+        ];
+      }
 
-      el.summaryCards.innerHTML = cards.map((c) => `
-        <button class="metric-btn" type="button" data-stat-action="${c.action}">
+      el.summaryCards.innerHTML = cards.map((c) => {
+        const aria = `${c.label}: ${c.value}. ${c.hint || "Apply filter"}`;
+        const hintHtml = c.hint ? `<div class="hint">${escapeHtml(c.hint)}</div>` : "";
+        return `
+        <button class="metric-btn" type="button" data-stat-action="${c.action}" aria-label="${escapeHtml(aria)}">
           <div class="label">${c.label}</div>
           <div class="value">${c.value}</div>
-          <div class="hint">${c.hint}</div>
+          ${hintHtml}
         </button>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function renderTable(rows) {
       if (rows.length === 0) {
         el.dataTbody.innerHTML = "";
         el.emptyState.hidden = false;
+        const favOnly = toLower(state.filters.favoritesOnly) === "yes";
+        const noStars = state.favorites.length === 0;
+        el.emptyState.textContent =
+          favOnly && noStars
+            ? "No favorites yet. Star conferences in the table, then filter to starred only."
+            : "No conferences match the current filters. Try Reset filters or fewer criteria.";
         return;
       }
       el.emptyState.hidden = true;
@@ -491,30 +2204,48 @@
         return `<td data-label="${escapeHtml(label)}"${cls}>${value}</td>`;
       }
 
-      el.dataTbody.innerHTML = rows.map((r) => `
-        <tr>
-          ${td("Name", ellipsisCell(r.conference_name))}
-          ${td("500+?", escapeHtml(normalize(r.attendees_500_plus)))}
-          ${td("CfP?", toPill(r.accepts_cfp))}
-          ${td("CfT?", toPill(r.accepts_cft))}
-          ${td("CfW?", toPill(r.accepts_cfw))}
-          ${td("Academic", renderAcceptanceLevelCell(r.academic_acceptance_level), "acceptance-col")}
-          ${td("CfP Month", escapeHtml(normalize(r.cfp_deadline_month)))}
-          ${td("Tracks", renderTrackBadges(r.submission_tracks))}
-          ${td("Sponsorship", sponsorshipPill(r.travel_accommodation_sponsorship))}
-          ${td("CfP", renderDeadlineValue(r, "cfp_deadline", "accepts_cfp"))}
-          ${td("CfT", renderDeadlineValue(r, "cft_deadline", "accepts_cft"))}
-          ${td("CfW", renderDeadlineValue(r, "cfw_deadline", "accepts_cfw"))}
-          ${td("Start", escapeHtml(normalize(r.conference_start_date)))}
-          ${td("End", escapeHtml(normalize(r.conference_end_date)))}
-          ${td("City", escapeHtml(normalize(r.city)))}
-          ${td("Country", renderCountryFlag(r.country), "country-col")}
-          ${td("Website/CfP", linkOrText(r.website_or_cfp_link))}
-          ${td("CfT Link", linkOrText(r.cft_link))}
-          ${td("CfW Link", linkOrText(r.cfw_link))}
-          ${td("Next Deadline", renderNextDeadline(r))}
-        </tr>
-      `).join("");
+      const attendee = isAttendeeMode();
+      el.dataTbody.innerHTML = rows
+        .map((r) => {
+          const cells = [
+            td("Name", renderNameCell(r), "name-col"),
+            td("Favorite", renderFavoriteCell(r), "fav-col"),
+            td("500+?", escapeHtml(normalize(r.attendees_500_plus)))
+          ];
+          if (!attendee) {
+            cells.push(
+              td("CfP?", toPill(r.accepts_cfp)),
+              td("CfT?", toPill(r.accepts_cft)),
+              td("CfW?", toPill(r.accepts_cfw)),
+              td("CfV?", toPill(r.accepts_cfv)),
+              td("Academic", renderAcceptanceLevelCell(r.academic_acceptance_level), "acceptance-col"),
+              td("Tracks", renderTrackBadges(r.submission_tracks)),
+              td("Sponsorship", sponsorshipPill(r.travel_accommodation_sponsorship)),
+              td("CfP", renderDeadlineValue(r, "cfp_deadline", "accepts_cfp")),
+              td("CfT", renderDeadlineValue(r, "cft_deadline", "accepts_cft")),
+              td("CfW", renderDeadlineValue(r, "cfw_deadline", "accepts_cfw")),
+              td("CfV", renderDeadlineValue(r, "cfv_deadline", "accepts_cfv"))
+            );
+          }
+          cells.push(
+            td("Start", escapeHtml(normalize(r.conference_start_date))),
+            td("End", escapeHtml(normalize(r.conference_end_date))),
+            td("City", escapeHtml(normalize(r.city))),
+            td("Country", renderCountryFlag(r.country), "country-col"),
+            td("Website/CfP", linkOrText(r.website_or_cfp_link))
+          );
+          if (!attendee) {
+            cells.push(
+              td("CfT Link", linkOrText(r.cft_link)),
+              td("CfW Link", linkOrText(r.cfw_link)),
+              td("CfV Link", linkOrText(r.cfv_link)),
+              td("Next Deadline", renderNextDeadline(r))
+            );
+          }
+          cells.push(td("Actions", renderRowActions(r), "table-action-cell"));
+          return `<tr>${cells.join("")}</tr>`;
+        })
+        .join("");
     }
 
     function parseMonthDay(monthDay) {
@@ -525,27 +2256,122 @@
       return { month: m, day: d };
     }
 
+    function startOfToday() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function conferenceStartDate(row) {
+      const clean = normalize(row.conference_start_date);
+      if (!clean || clean.toUpperCase() === "TBD") return null;
+      const t = Date.parse(clean);
+      return Number.isNaN(t) ? null : new Date(t);
+    }
+
+    function conferenceEndDate(row) {
+      const clean = normalize(row.conference_end_date);
+      if (!clean || clean.toUpperCase() === "TBD") return null;
+      const t = Date.parse(clean);
+      return Number.isNaN(t) ? null : new Date(t);
+    }
+
+    function monthDayOrdinal(parsed) {
+      return parsed.month * 100 + parsed.day;
+    }
+
+    function resolveDeadlineDate(row, deadlineKey, options) {
+      const monthDay = normalize(row[deadlineKey]);
+      if (!monthDay || monthDay.toUpperCase() === "TBD") return null;
+      const parsed = parseMonthDay(monthDay);
+      if (!parsed) return null;
+
+      const conf = conferenceStartDate(row);
+      if (!conf) {
+        const today = startOfToday();
+        let deadlineDate = new Date(today.getFullYear(), parsed.month - 1, parsed.day);
+        if (options?.rollForwardIfPast !== false) {
+          const msPerDay = 24 * 60 * 60 * 1000;
+          const days = Math.round((deadlineDate - today) / msPerDay);
+          if (days < -60) {
+            deadlineDate = new Date(today.getFullYear() + 1, parsed.month - 1, parsed.day);
+          }
+        }
+        return deadlineDate;
+      }
+
+      const today = startOfToday();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const dlOrd = monthDayOrdinal(parsed);
+      const confOrd = monthDayOrdinal({
+        month: conf.getMonth() + 1,
+        day: conf.getDate()
+      });
+
+      let deadlineYear = conf.getFullYear();
+      if (dlOrd > confOrd) deadlineYear -= 1;
+      let deadlineDate = new Date(deadlineYear, parsed.month - 1, parsed.day);
+
+      if (options?.rollForwardIfPast !== false) {
+        let days = Math.round((deadlineDate - today) / msPerDay);
+        if (days < -60) {
+          const confEnd = conferenceEndDate(row);
+          const editionOver = confEnd && confEnd < today;
+          if (editionOver) {
+            deadlineDate = new Date(deadlineYear + 1, parsed.month - 1, parsed.day);
+          }
+        }
+      }
+
+      return deadlineDate;
+    }
+
+    function daysUntilDeadlineForRow(row, deadlineKey, options) {
+      const deadlineDate = resolveDeadlineDate(row, deadlineKey, options);
+      if (!deadlineDate) return null;
+      const today = startOfToday();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      return Math.round((deadlineDate - today) / msPerDay);
+    }
+
+    function isActionableCfp(row) {
+      if (normalize(row.accepts_cfp) !== "Yes") return false;
+      const dl = normalize(row.cfp_deadline);
+      if (!dl || dl.toUpperCase() === "TBD") return false;
+      const days = daysUntilDeadlineForRow(row, "cfp_deadline", { rollForwardIfPast: false });
+      return days !== null && days >= 0;
+    }
+
+    function countryMatchesRegion(country, region) {
+      if (!region) return true;
+      const c = normalize(country);
+      if (!c || c === "TBD" || c === "Global" || c === "Virtual") return false;
+      const set = COUNTRY_REGION[region];
+      return set ? set.has(c) : true;
+    }
+
     function getNextDeadlineInfo(row) {
       const candidates = [
-        { key: "cfp_deadline", label: "CfP" },
-        { key: "cft_deadline", label: "CfT" },
-        { key: "cfw_deadline", label: "CfW" }
+        { key: "cfp_deadline", label: "CfP", acceptsKey: "accepts_cfp" },
+        { key: "cft_deadline", label: "CfT", acceptsKey: "accepts_cft" },
+        { key: "cfw_deadline", label: "CfW", acceptsKey: "accepts_cfw" },
+        { key: "cfv_deadline", label: "CfV", acceptsKey: "accepts_cfv" }
       ];
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let best = null;
+      const today = startOfToday();
+      const msPerDay = 24 * 60 * 60 * 1000;
 
       candidates.forEach((c) => {
-        const parsed = parseMonthDay(row[c.key]);
-        if (!parsed) return;
-        let date = new Date(today.getFullYear(), parsed.month - 1, parsed.day);
-        if (date < today) {
-          date = new Date(today.getFullYear() + 1, parsed.month - 1, parsed.day);
-        }
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const daysUntil = Math.round((date - today) / msPerDay);
+        if (normalize(row[c.acceptsKey]) === "No") return;
+        const monthDay = normalize(row[c.key]);
+        if (!monthDay || monthDay.toUpperCase() === "TBD") return;
+
+        const deadlineDate = resolveDeadlineDate(row, c.key, { rollForwardIfPast: false });
+        if (!deadlineDate) return;
+        const daysUntil = Math.round((deadlineDate - today) / msPerDay);
+        if (daysUntil < 0) return;
+
         if (!best || daysUntil < best.daysUntil) {
-          best = { label: c.label, monthDay: normalize(row[c.key]), daysUntil };
+          best = { label: c.label, monthDay, daysUntil, deadlineDate };
         }
       });
       return best;
@@ -555,7 +2381,8 @@
       const acceptsCfp = normalize(row.accepts_cfp);
       const acceptsCft = normalize(row.accepts_cft);
       const acceptsCfw = normalize(row.accepts_cfw);
-      if (acceptsCfp === "No" && acceptsCft === "No" && acceptsCfw === "No") {
+      const acceptsCfv = normalize(row.accepts_cfv);
+      if (acceptsCfp === "No" && acceptsCft === "No" && acceptsCfw === "No" && acceptsCfv === "No") {
         return `<span class="pill pill-na">N/A</span>`;
       }
       const info = getNextDeadlineInfo(row);
@@ -583,16 +2410,16 @@
       const raw = normalize(value);
       const v = toLower(raw);
       if (v === "yes") {
-        return `<span class="pill pill-yes" title="Travel or accommodation sponsorship offered">Yes</span>`;
+        return `<span class="pill pill-yes">Yes</span>`;
       }
       if (v === "no") {
-        return `<span class="pill pill-no" title="No travel or accommodation sponsorship">No</span>`;
+        return `<span class="pill pill-no">No</span>`;
       }
       if (v === "partial") {
-        return `<span class="pill pill-gray" title="Partial travel or accommodation support">Partial</span>`;
+        return `<span class="pill pill-gray">Partial</span>`;
       }
       const label = raw || "Unknown";
-      return `<span class="pill pill-gray" title="Sponsorship status not verified">${escapeHtml(label)}</span>`;
+      return `<span class="pill pill-gray">${escapeHtml(label)}</span>`;
     }
 
     function parseCities(cityValue) {
@@ -783,13 +2610,12 @@
       if (!mapLayer || !el.mapMeta) return;
 
       const points = buildConferenceMapPoints(rows);
-      el.mapMeta.textContent = `Geocoding ${points.length} conference point${points.length === 1 ? "" : "s"}...`;
+      el.mapMeta.textContent = `Loading ${points.length}…`;
 
       mapLayer.clearLayers();
 
       let mapped = 0;
       let unresolved = 0;
-      let countryFallbackCount = 0;
       for (const entry of points) {
         const point = await geocodeLocation({
           key: entry.locationKey,
@@ -801,9 +2627,6 @@
           continue;
         }
         mapped += 1;
-        if (point.precision === "country") {
-          countryFallbackCount += 1;
-        }
         const jitterRadius = 0.13;
         const angle = (entry.indexInCity % 12) * (Math.PI / 6);
         const ring = Math.floor(entry.indexInCity / 12);
@@ -833,10 +2656,9 @@
         marker.addTo(mapLayer);
       }
 
-      const fallbackText = countryFallbackCount
-        ? ` ${countryFallbackCount} point${countryFallbackCount === 1 ? "" : "s"} use country-level placement.`
-        : "";
-      el.mapMeta.textContent = `Showing ${mapped} conferences on the map.${fallbackText}${unresolved ? ` ${unresolved} point${unresolved === 1 ? "" : "s"} could not be geocoded.` : ""}`;
+      const parts = [`${mapped} on map`];
+      if (unresolved) parts.push(`${unresolved} unknown`);
+      el.mapMeta.textContent = parts.join(" · ");
       setTimeout(() => mapInstance?.invalidateSize(), 0);
     }
 
@@ -886,13 +2708,19 @@
         acceptsCfp: "CfP",
         acceptsCft: "CfT",
         acceptsCfw: "CfW",
+        acceptsCfv: "CfV",
         cftOrCfw: "CfT or CfW",
         academicLevel: "Academic",
         sponsorship: "Sponsorship",
         conferenceType: "Type",
         cfpMonth: "CfP Month",
         venuePattern: "Venue Pattern",
-        deadlineWindow: "Deadline"
+        deadlineWindow: "Deadline",
+        favoritesOnly: "Favorites",
+        region: "Region",
+        actionableCfp: "Actionable CfP",
+        industryTalks: "Industry talks",
+        inPipeline: "Pipeline"
       };
       const activeEntries = Object.entries(state.filters)
         .filter(([k, v]) => k !== "sortBy" && Boolean(v));
@@ -902,7 +2730,17 @@
       }
       el.activeFilterChips.innerHTML = activeEntries.map(([key, value]) => {
         const displayValue =
-          key === "cftOrCfw" && toLower(value) === "yes" ? "either CfT or CfW" : value;
+          key === "cftOrCfw" && toLower(value) === "yes"
+            ? "either CfT or CfW"
+            : key === "favoritesOnly" && toLower(value) === "yes"
+              ? "only"
+              : key === "actionableCfp" && toLower(value) === "yes"
+                ? "open deadlines"
+                : key === "industryTalks" && toLower(value) === "yes"
+                  ? "Industry + Mixed"
+                  : key === "inPipeline" && toLower(value) === "yes"
+                    ? "mine only"
+                    : value;
         return `
         <button class="chip" type="button" data-clear-filter="${key}">
           <span>${labels[key] || key}:</span>${escapeHtml(displayValue)} x
@@ -1000,6 +2838,12 @@
           if (aDays !== bDays) return aDays - bDays;
           return normalize(a.conference_name).localeCompare(normalize(b.conference_name));
         });
+      } else if (sortBy === "start_soon") {
+        sorted.sort((a, b) => {
+          const dateCmp = isoDateOrder(a.conference_start_date) - isoDateOrder(b.conference_start_date);
+          if (dateCmp !== 0) return dateCmp;
+          return normalize(a.conference_name).localeCompare(normalize(b.conference_name));
+        });
       } else {
         sorted.sort((a, b) => {
           const attendeesCmp = attendeesOrder(a.attendees_500_plus) - attendeesOrder(b.attendees_500_plus);
@@ -1024,16 +2868,34 @@
         if (s.acceptsCft && normalize(row.accepts_cft) !== s.acceptsCft) return false;
         if (s.acceptsCfw && normalize(row.accepts_cfw) !== s.acceptsCfw) return false;
       }
+      if (s.acceptsCfv && normalize(row.accepts_cfv) !== s.acceptsCfv) return false;
       if (s.academicLevel && normalize(row.academic_acceptance_level) !== s.academicLevel) return false;
       if (s.sponsorship && normalize(row.travel_accommodation_sponsorship) !== s.sponsorship) return false;
       if (s.conferenceType && normalize(row.conference_type) !== s.conferenceType) return false;
       if (s.cfpMonth && normalize(row.cfp_deadline_month) !== s.cfpMonth) return false;
       if (s.venuePattern && normalize(row.venue_pattern) !== s.venuePattern) return false;
       if (s.deadlineWindow) {
-        const info = getNextDeadlineInfo(row);
         const limit = Number(s.deadlineWindow);
-        if (!info || Number.isNaN(limit) || info.daysUntil > limit) return false;
+        if (!Number.isNaN(limit)) {
+          let days = null;
+          if (normalize(row.accepts_cfp) === "Yes") {
+            days = daysUntilDeadlineForRow(row, "cfp_deadline", { rollForwardIfPast: false });
+          }
+          if (days === null) {
+            const info = getNextDeadlineInfo(row);
+            days = info ? info.daysUntil : null;
+          }
+          if (days === null || days < 0 || days > limit) return false;
+        }
       }
+      if (toLower(s.actionableCfp) === "yes" && !isActionableCfp(row)) return false;
+      if (s.region && !countryMatchesRegion(row.country, s.region)) return false;
+      if (toLower(s.industryTalks) === "yes") {
+        const lvl = normalize(row.academic_acceptance_level);
+        if (lvl !== "Industry" && lvl !== "Mixed") return false;
+      }
+      if (toLower(s.inPipeline) === "yes" && !isInPipeline(row.conference_name)) return false;
+      if (toLower(s.favoritesOnly) === "yes" && !isFavorite(row.conference_name)) return false;
       return true;
     }
 
@@ -1043,22 +2905,100 @@
       state.filters.acceptsCfp = normalize(el.acceptsCfpFilter.value);
       state.filters.acceptsCft = normalize(el.acceptsCftFilter.value);
       state.filters.acceptsCfw = normalize(el.acceptsCfwFilter.value);
+      state.filters.acceptsCfv = normalize(el.acceptsCfvFilter?.value);
       state.filters.academicLevel = normalize(el.academicFilter.value);
       state.filters.sponsorship = normalize(el.sponsorshipFilter.value);
       state.filters.conferenceType = normalize(el.typeFilter.value);
       state.filters.cfpMonth = normalize(el.monthFilter.value);
       state.filters.venuePattern = normalize(el.venuePatternFilter.value);
+      state.filters.favoritesOnly = normalize(el.favoritesFilter?.value);
       state.filters.sortBy = normalize(el.sortFilter.value) || "attendees_name";
-      if (state.filters.acceptsCft || state.filters.acceptsCfw) {
+      if (state.filters.acceptsCft || state.filters.acceptsCfw || state.filters.acceptsCfv) {
         state.filters.cftOrCfw = "";
       }
     }
 
     function updateFilterMeta() {
+      if (!el.activeFilterMeta) return;
       const active = getActiveFilterCount();
-      el.activeFilterMeta.textContent = active === 0
-        ? "No filters active. Use the summary cards for quick actions."
-        : `${active} active filter${active > 1 ? "s" : ""} (saved in browser)`;
+      if (active === 0) {
+        el.activeFilterMeta.hidden = false;
+        el.activeFilterMeta.textContent = "No filters active";
+        return;
+      }
+      el.activeFilterMeta.textContent = "";
+      el.activeFilterMeta.hidden = true;
+    }
+
+    function applySpeakerPreset(preset) {
+      state.filters = speakerPresetFilters();
+      state.headerSort = { key: "", direction: "asc" };
+      if (preset === "due_14") state.filters.deadlineWindow = "14";
+      if (preset === "travel") state.filters.sponsorship = "Yes";
+      if (preset === "industry") state.filters.industryTalks = "yes";
+      if (preset === "pipeline") {
+        state.filters = { ...defaultFilters(), inPipeline: "yes", sortBy: "deadline_soon" };
+      }
+      if (preset === "region_europe") state.filters.region = "europe";
+      if (preset === "region_americas") state.filters.region = "americas";
+      if (preset === "region_apac") state.filters.region = "apac";
+      applyFilterValuesToInputs();
+      rerender();
+    }
+
+    function isSpeakerPresetActive(preset, f) {
+      if (preset === "discover") {
+        return (
+          toLower(f.actionableCfp) === "yes" &&
+          f.acceptsCfp === "Yes" &&
+          !f.region &&
+          !f.deadlineWindow &&
+          !f.sponsorship &&
+          !toLower(f.industryTalks) &&
+          !toLower(f.inPipeline)
+        );
+      }
+      if (preset === "due_14") {
+        return (
+          toLower(f.actionableCfp) === "yes" &&
+          f.acceptsCfp === "Yes" &&
+          f.deadlineWindow === "14" &&
+          !f.region &&
+          !f.sponsorship &&
+          !toLower(f.industryTalks) &&
+          !toLower(f.inPipeline)
+        );
+      }
+      if (preset === "travel") {
+        return (
+          f.sponsorship === "Yes" &&
+          toLower(f.actionableCfp) === "yes" &&
+          f.acceptsCfp === "Yes" &&
+          !f.region &&
+          !f.deadlineWindow &&
+          !toLower(f.industryTalks)
+        );
+      }
+      if (preset === "industry") {
+        return toLower(f.industryTalks) === "yes" && f.sortBy === "deadline_soon" && !toLower(f.actionableCfp);
+      }
+      if (preset === "pipeline") {
+        return toLower(f.inPipeline) === "yes" && !toLower(f.actionableCfp);
+      }
+      if (preset === "region_europe") return f.region === "europe";
+      if (preset === "region_americas") return f.region === "americas";
+      if (preset === "region_apac") return f.region === "apac";
+      return false;
+    }
+
+    function renderSpeakerPresetActiveState() {
+      if (!el.discoverQuickActions) return;
+      const f = state.filters;
+      el.discoverQuickActions.querySelectorAll("[data-speaker-preset]").forEach((btn) => {
+        const preset = btn.getAttribute("data-speaker-preset");
+        btn.classList.toggle("active", isSpeakerPresetActive(preset, f));
+        btn.setAttribute("aria-pressed", isSpeakerPresetActive(preset, f) ? "true" : "false");
+      });
     }
 
     function applyPreset(preset) {
@@ -1066,12 +3006,38 @@
         resetFilters();
         return;
       }
-      state.filters = defaultFilters();
-      if (preset === "open_cfp") state.filters.acceptsCfp = "Yes";
+      if (preset === "favorites_only") {
+        state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : defaultFilters();
+        state.filters.favoritesOnly = "yes";
+        state.filters.sortBy = "deadline_soon";
+        state.headerSort = { key: "", direction: "asc" };
+        applyFilterValuesToInputs();
+        rerender();
+        return;
+      }
+      if (preset === "actionable_cfp") {
+        applySpeakerPreset("discover");
+        return;
+      }
+      if (preset === "due_14") {
+        applySpeakerPreset("due_14");
+        return;
+      }
+      if (preset === "industry_talks") {
+        applySpeakerPreset("industry");
+        return;
+      }
+      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : defaultFilters();
+      if (preset === "open_cfp") {
+        state.filters.acceptsCfp = "Yes";
+        state.filters.actionableCfp = "";
+      }
       if (preset === "open_cft_or_cfw") {
         state.filters.cftOrCfw = "yes";
         state.filters.acceptsCft = "";
         state.filters.acceptsCfw = "";
+        state.filters.acceptsCfv = "";
+        state.filters.actionableCfp = "";
       }
       if (preset === "travel_support") state.filters.sponsorship = "Yes";
       if (preset === "due_30") state.filters.deadlineWindow = "30";
@@ -1087,7 +3053,8 @@
       const map = {
         acceptsCfp: "acceptsCfp",
         acceptsCft: "acceptsCft",
-        acceptsCfw: "acceptsCfw"
+        acceptsCfw: "acceptsCfw",
+        acceptsCfv: "acceptsCfv"
       };
       const stateKey = map[filterKey];
       if (!stateKey) return;
@@ -1116,16 +3083,116 @@
       const headers = [...el.dataThead.querySelectorAll(".clickable-th")];
       headers.forEach((th) => {
         th.classList.remove("sort-asc", "sort-desc", "filter-active");
+        if (th.hasAttribute("data-sort-key")) th.setAttribute("aria-sort", "none");
         const sortKey = th.getAttribute("data-sort-key");
         const filterKey = th.getAttribute("data-filter-key");
         if (sortKey && sortKey === state.headerSort.key) {
           th.classList.add(state.headerSort.direction === "desc" ? "sort-desc" : "sort-asc");
+          th.setAttribute("aria-sort", state.headerSort.direction === "desc" ? "descending" : "ascending");
         }
         if (filterKey) {
           const current = state.filters[filterKey] || "";
           if (current) th.classList.add("filter-active");
         }
       });
+    }
+
+    function isSmallScreen() {
+      return window.matchMedia("(max-width: 640px)").matches;
+    }
+
+    function isAttendeeMode() {
+      return state.personaMode === "attendee";
+    }
+
+    const SPEAKER_ONLY_FILTER_KEYS = [
+      "acceptsCfp",
+      "acceptsCft",
+      "acceptsCfw",
+      "acceptsCfv",
+      "cftOrCfw",
+      "academicLevel",
+      "sponsorship",
+      "cfpMonth",
+      "deadlineWindow",
+      "actionableCfp",
+      "industryTalks",
+      "inPipeline"
+    ];
+
+    function clearSpeakerOnlyFilters() {
+      SPEAKER_ONLY_FILTER_KEYS.forEach((k) => {
+        state.filters[k] = "";
+      });
+      if (state.filters.sortBy === "month_name" || state.filters.sortBy === "deadline_soon") {
+        state.filters.sortBy = "attendees_name";
+      }
+      if (
+        state.headerSort.key &&
+        (state.headerSort.key.startsWith("accepts_") ||
+          state.headerSort.key === "academic_acceptance_level")
+      ) {
+        state.headerSort = { key: "", direction: "asc" };
+      }
+    }
+
+    function sortFilterOptionsHtml() {
+      const cur = state.filters.sortBy || "attendees_name";
+      const opts = isAttendeeMode()
+        ? [
+            { v: "attendees_name", l: "500+ attendees, then name" },
+            { v: "name_asc", l: "Name A–Z" },
+            { v: "start_soon", l: "Conference date soonest" }
+          ]
+        : [
+            { v: "attendees_name", l: "500+ attendees, then name" },
+            { v: "name_asc", l: "Name A–Z" },
+            { v: "month_name", l: "CfP month, then name" },
+            { v: "deadline_soon", l: "Next deadline soonest" }
+          ];
+      return opts
+        .map((o) => `<option value="${o.v}"${cur === o.v ? " selected" : ""}>${escapeHtml(o.l)}</option>`)
+        .join("");
+    }
+
+    function updateTableHeaderForPersona() {
+      if (!el.dataThead) return;
+      const hideSpeakerCols = isAttendeeMode();
+      el.dataThead.querySelectorAll("th").forEach((th) => {
+        if (th.classList.contains("speaker-only-col")) {
+          th.hidden = hideSpeakerCols;
+        }
+      });
+    }
+
+    function applyPersonaDiscoverUI() {
+      document.documentElement.dataset.persona = state.personaMode;
+      const hideSpeaker = isAttendeeMode();
+      document.querySelectorAll("#filters .speaker-only").forEach((node) => {
+        node.hidden = hideSpeaker;
+      });
+      if (el.sortFilter) {
+        el.sortFilter.innerHTML = sortFilterOptionsHtml();
+        const allowed = [...el.sortFilter.options].map((o) => o.value);
+        if (!allowed.includes(state.filters.sortBy)) {
+          state.filters.sortBy = "attendees_name";
+        }
+      }
+      updateTableHeaderForPersona();
+      if (el.filtersWrap) {
+        el.filtersWrap.classList.toggle("filters-attendee", hideSpeaker);
+      }
+    }
+
+    function setAdvancedFiltersExpanded(expanded) {
+      advancedFiltersExpanded = Boolean(expanded);
+      el.advancedFilterFields.forEach((field) => {
+        field.hidden = !advancedFiltersExpanded;
+      });
+      if (el.advancedFiltersBtn) {
+        el.advancedFiltersBtn.setAttribute("aria-expanded", advancedFiltersExpanded ? "true" : "false");
+        el.advancedFiltersBtn.textContent = advancedFiltersExpanded ? "Hide extra filters" : "Show more filters";
+      }
     }
 
     function rerender() {
@@ -1139,7 +3206,11 @@
       renderTable(sortedFiltered);
       updateFilterMeta();
       renderFilterChips();
+      renderSpeakerPresetActiveState();
       renderHeaderInteractions();
+      applyPersonaDiscoverUI();
+      renderMyPanels();
+      refreshConferenceDetailIfOpen();
       updateMapIfVisible();
     }
 
@@ -1148,6 +3219,7 @@
       fillOptions(el.acceptsCfpFilter, uniqueSortedValues(rows, "accepts_cfp"));
       fillOptions(el.acceptsCftFilter, uniqueSortedValues(rows, "accepts_cft"));
       fillOptions(el.acceptsCfwFilter, uniqueSortedValues(rows, "accepts_cfw"));
+      fillOptions(el.acceptsCfvFilter, uniqueSortedValues(rows, "accepts_cfv"));
       fillOptions(el.academicFilter, uniqueSortedValues(rows, "academic_acceptance_level"));
       fillOptions(el.sponsorshipFilter, uniqueSortedValues(rows, "travel_accommodation_sponsorship"));
       fillOptions(el.typeFilter, uniqueSortedValues(rows, "conference_type"));
@@ -1176,23 +3248,143 @@
     }
 
     function resetFilters() {
-      state.filters = defaultFilters();
+      closeConferenceDetail();
+      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : defaultFilters();
       state.headerSort = { key: "", direction: "asc" };
       localStorage.removeItem(STORAGE_KEY);
       applyFilterValuesToInputs();
       rerender();
     }
 
+    function initInstantTips() {
+      const tip = document.createElement("div");
+      tip.id = "uiTip";
+      tip.className = "ui-tip";
+      tip.hidden = true;
+      tip.setAttribute("role", "tooltip");
+      document.body.appendChild(tip);
+
+      const hoverMq = window.matchMedia("(hover: hover) and (pointer: fine)");
+      let activeTarget = null;
+
+      function tipParentFor(target) {
+        return target?.closest("dialog[open]") || document.body;
+      }
+
+      function attachTipTo(target) {
+        const parent = tipParentFor(target);
+        if (tip.parentNode !== parent) parent.appendChild(tip);
+      }
+
+      function hideTip() {
+        activeTarget = null;
+        tip.hidden = true;
+        if (tip.parentNode !== document.body) document.body.appendChild(tip);
+      }
+
+      function placeTip(target) {
+        const text = target.getAttribute("data-tip");
+        if (!text) {
+          hideTip();
+          return;
+        }
+        attachTipTo(target);
+        tip.textContent = text;
+        tip.hidden = false;
+        const rect = target.getBoundingClientRect();
+        const margin = 8;
+        let top = rect.top - tip.offsetHeight - margin;
+        let left = rect.left + rect.width / 2 - tip.offsetWidth / 2;
+        left = Math.max(margin, Math.min(left, window.innerWidth - tip.offsetWidth - margin));
+        if (top < margin) top = rect.bottom + margin;
+        tip.style.top = `${Math.round(top)}px`;
+        tip.style.left = `${Math.round(left)}px`;
+      }
+
+      function showTip(target) {
+        if (!target?.getAttribute("data-tip")) return;
+        activeTarget = target;
+        placeTip(target);
+      }
+
+      document.addEventListener(
+        "mouseover",
+        (event) => {
+          if (!hoverMq.matches) return;
+          const el = event.target.closest("[data-tip]");
+          if (el) showTip(el);
+        },
+        true
+      );
+
+      document.addEventListener(
+        "mouseout",
+        (event) => {
+          if (!hoverMq.matches || !activeTarget) return;
+          const from = event.target.closest("[data-tip]");
+          if (!from || from !== activeTarget) return;
+          const to = event.relatedTarget;
+          if (to && from.contains(to)) return;
+          hideTip();
+        },
+        true
+      );
+
+      document.addEventListener(
+        "focusin",
+        (event) => {
+          const el = event.target.closest("[data-tip]");
+          if (el) showTip(el);
+        },
+        true
+      );
+
+      document.addEventListener(
+        "focusout",
+        (event) => {
+          if (!activeTarget) return;
+          const el = event.target.closest("[data-tip]");
+          if (el === activeTarget) hideTip();
+        },
+        true
+      );
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (activeTarget) placeTip(activeTarget);
+        },
+        true
+      );
+
+      hoverMq.addEventListener("change", () => {
+        if (!hoverMq.matches) hideTip();
+      });
+    }
+
     function bindEvents() {
-      const rerenderOnInput = [el.searchInput, el.attendeesFilter, el.acceptsCfpFilter, el.acceptsCftFilter, el.acceptsCfwFilter, el.academicFilter, el.sponsorshipFilter, el.typeFilter, el.monthFilter, el.venuePatternFilter, el.sortFilter];
+      initInstantTips();
+      const rerenderOnInput = [el.searchInput, el.favoritesFilter, el.attendeesFilter, el.acceptsCfpFilter, el.acceptsCftFilter, el.acceptsCfwFilter, el.acceptsCfvFilter, el.academicFilter, el.sponsorshipFilter, el.typeFilter, el.monthFilter, el.venuePatternFilter, el.sortFilter];
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("input", rerender));
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("change", rerender));
       if (el.resetBtn) el.resetBtn.addEventListener("click", resetFilters);
+      if (el.advancedFiltersBtn) {
+        el.advancedFiltersBtn.addEventListener("click", () => {
+          setAdvancedFiltersExpanded(!advancedFiltersExpanded);
+        });
+      }
       if (el.summaryCards) el.summaryCards.addEventListener("click", (event) => {
         const btn = event.target.closest("[data-stat-action]");
         if (!btn) return;
         applyPreset(btn.getAttribute("data-stat-action"));
       });
+      if (el.discoverQuickActions) {
+        el.discoverQuickActions.addEventListener("click", (event) => {
+          const btn = event.target.closest("[data-speaker-preset]");
+          if (!btn) return;
+          applySpeakerPreset(btn.getAttribute("data-speaker-preset"));
+        });
+      }
       if (el.activeFilterChips) el.activeFilterChips.addEventListener("click", (event) => {
         const btn = event.target.closest("[data-clear-filter]");
         if (!btn) return;
@@ -1223,6 +3415,309 @@
       });
       if (el.tabDashboard) el.tabDashboard.addEventListener("click", () => setActiveTab("dashboard"));
       if (el.tabMap) el.tabMap.addEventListener("click", () => setActiveTab("map"));
+      window.matchMedia("(max-width: 640px)").addEventListener("change", () => {
+        applyPrimaryNavModel();
+      });
+      if (el.themeToggle) {
+        el.themeToggle.addEventListener("click", () => toggleTheme());
+      }
+      if (el.personaSelect) {
+        el.personaSelect.addEventListener("change", () => {
+          setPersonaMode(el.personaSelect.value);
+        });
+      }
+      document.querySelectorAll(".app-view-nav button[data-app-section]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const sec = btn.getAttribute("data-app-section");
+          if (sec) setAppSection(sec);
+        });
+      });
+      if (el.appViewNav) {
+        el.appViewNav.addEventListener("keydown", (event) => {
+          const target = event.target.closest("button[data-app-section]");
+          if (!target) return;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+            event.preventDefault();
+            moveFocusInButtonList(el.appViewNav, target, 1);
+          } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+            event.preventDefault();
+            moveFocusInButtonList(el.appViewNav, target, -1);
+          } else if (event.key === "Home") {
+            const first = el.appViewNav.querySelector("button[data-app-section]:not([hidden])");
+            if (first) {
+              event.preventDefault();
+              first.focus();
+            }
+          } else if (event.key === "End") {
+            const list = [...el.appViewNav.querySelectorAll("button[data-app-section]:not([hidden])")];
+            const last = list[list.length - 1];
+            if (last) {
+              event.preventDefault();
+              last.focus();
+            }
+          }
+        });
+      }
+      if (el.tabNav) {
+        el.tabNav.addEventListener("keydown", (event) => {
+          const target = event.target.closest("button.tab-btn");
+          if (!target) return;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+            event.preventDefault();
+            moveFocusInButtonList(el.tabNav, target, 1);
+          } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+            event.preventDefault();
+            moveFocusInButtonList(el.tabNav, target, -1);
+          } else if (event.key === "Home") {
+            const first = el.tabNav.querySelector("button.tab-btn:not([hidden])");
+            if (first) {
+              event.preventDefault();
+              first.focus();
+            }
+          } else if (event.key === "End") {
+            const list = [...el.tabNav.querySelectorAll("button.tab-btn:not([hidden])")];
+            const last = list[list.length - 1];
+            if (last) {
+              event.preventDefault();
+              last.focus();
+            }
+          }
+        });
+      }
+      if (el.dataTbody) {
+        el.dataTbody.addEventListener("click", (event) => {
+          const btn = event.target.closest("[data-action]");
+          if (!btn) return;
+          const enc = btn.getAttribute("data-cname");
+          if (!enc) return;
+          const name = decodeURIComponent(enc);
+          const action = btn.getAttribute("data-action");
+          if (action === "open-detail") {
+            const row = findRowByConferenceName(name);
+            if (row) openConferenceDetail(row);
+            return;
+          }
+          if (action === "fav-toggle") {
+            toggleFavorite(name);
+            rerender();
+            return;
+          }
+          if (action === "pipeline-add") addToPipeline(name);
+          else if (action === "pipeline-remove") removeFromPipeline(name);
+          else if (action === "saved-add") addSavedTrip(name);
+          else if (action === "saved-remove") removeSavedTrip(name);
+          else return;
+          rerender();
+        });
+      }
+      if (el.mySpeakerList) {
+        el.mySpeakerList.addEventListener("change", (event) => {
+          const t = event.target;
+          if (t.matches("[data-pipeline-year]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setPipelinePlanningYear(decodeURIComponent(enc), t.value);
+            return;
+          }
+          if (t.matches("[data-pipe-plan-status]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setPipePlan(decodeURIComponent(enc), t.value);
+            return;
+          }
+          const sel = event.target.closest("[data-pipeline-status]");
+          if (!sel) return;
+          const enc = sel.getAttribute("data-cname");
+          if (!enc) return;
+          setPipelineStatus(decodeURIComponent(enc), sel.value);
+        });
+        el.mySpeakerList.addEventListener("click", (event) => {
+          const btn = event.target.closest("[data-action]");
+          if (!btn || btn.getAttribute("data-action") !== "pipeline-remove") return;
+          const enc = btn.getAttribute("data-cname");
+          if (!enc) return;
+          removeFromPipeline(decodeURIComponent(enc));
+          rerender();
+        });
+      }
+      if (el.myTripsList) {
+        el.myTripsList.addEventListener("change", (event) => {
+          const t = event.target;
+          if (t.matches("[data-trip-year]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setTripPlanningYear(decodeURIComponent(enc), t.value);
+            return;
+          }
+          if (t.matches("[data-trip-plan-status]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setTripPlan(decodeURIComponent(enc), t.value);
+            return;
+          }
+        });
+        el.myTripsList.addEventListener("click", (event) => {
+          const btn = event.target.closest("[data-action]");
+          if (!btn || btn.getAttribute("data-action") !== "saved-remove") return;
+          const enc = btn.getAttribute("data-cname");
+          if (!enc) return;
+          removeSavedTrip(decodeURIComponent(enc));
+          rerender();
+        });
+      }
+      if (el.pipelineYearFilter) {
+        el.pipelineYearFilter.addEventListener("change", () => {
+          const v = el.pipelineYearFilter.value;
+          state.planningYearFilterPipeline = v === "all" ? "all" : Number(v);
+          savePlanningPrefs();
+          renderMyPanels();
+        });
+      }
+      if (el.tripsYearFilter) {
+        el.tripsYearFilter.addEventListener("change", () => {
+          const v = el.tripsYearFilter.value;
+          state.planningYearFilterTrips = v === "all" ? "all" : Number(v);
+          savePlanningPrefs();
+          renderMyPanels();
+        });
+      }
+      if (el.onboardingContinue) {
+        el.onboardingContinue.addEventListener("click", () => {
+          completeOnboarding();
+        });
+      }
+      if (el.exportStorageBtn) {
+        el.exportStorageBtn.addEventListener("click", () => {
+          exportStorageBackup();
+        });
+      }
+      if (el.importStorageBtn && el.importStorageFile) {
+        el.importStorageBtn.addEventListener("click", () => {
+          el.importStorageFile.click();
+        });
+        el.importStorageFile.addEventListener("change", (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (file) importStorageFromFile(file);
+          event.target.value = "";
+        });
+      }
+      if (el.exportCsvBtn) {
+        el.exportCsvBtn.addEventListener("click", () => {
+          exportFilteredCsv();
+        });
+      }
+      if (el.copyViewLinkBtn) {
+        el.copyViewLinkBtn.addEventListener("click", () => {
+          copyViewLinkToClipboard();
+        });
+      }
+      let notesDebounce;
+      if (el.conferenceDetailNotes) {
+        el.conferenceDetailNotes.addEventListener("input", () => {
+          clearTimeout(notesDebounce);
+          notesDebounce = setTimeout(() => {
+            const n = state.detailConferenceName;
+            if (!n) return;
+            setNoteForConference(n, el.conferenceDetailNotes.value);
+          }, 400);
+        });
+      }
+      if (el.conferenceDetailClose) {
+        el.conferenceDetailClose.addEventListener("click", () => {
+          closeConferenceDetail();
+        });
+      }
+      if (el.conferenceDetailDialog) {
+        el.conferenceDetailDialog.addEventListener("change", (event) => {
+          const t = event.target;
+          if (t.matches("[data-trip-year]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setTripPlanningYear(decodeURIComponent(enc), t.value);
+            return;
+          }
+          if (t.matches("[data-trip-plan-status]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setTripPlan(decodeURIComponent(enc), t.value);
+            return;
+          }
+          if (t.matches("[data-pipeline-year]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setPipelinePlanningYear(decodeURIComponent(enc), t.value);
+            return;
+          }
+          if (t.matches("[data-pipe-plan-status]")) {
+            const enc = t.getAttribute("data-cname");
+            if (!enc) return;
+            setPipePlan(decodeURIComponent(enc), t.value);
+          }
+        });
+        el.conferenceDetailDialog.addEventListener("click", (event) => {
+          const btn = event.target.closest("[data-detail-action]");
+          if (!btn) return;
+          const action = btn.getAttribute("data-detail-action");
+          const enc = btn.getAttribute("data-cname");
+          if (!enc) return;
+          const name = decodeURIComponent(enc);
+          const row = findRowByConferenceName(name);
+          if (!row) return;
+          if (action === "ics") {
+            downloadIcsForConference(row);
+            return;
+          }
+          if (action === "copy-conf-link") {
+            const u = new URL(window.location.href);
+            u.searchParams.set("c", name);
+            const link = u.toString();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(link).then(() => {
+                if (el.conferenceDetailHint) el.conferenceDetailHint.textContent = "Conference link copied.";
+              }).catch(() => {
+                window.prompt("Copy this link:", link);
+              });
+            } else {
+              window.prompt("Copy this link:", link);
+            }
+            return;
+          }
+          if (action === "fav-toggle") {
+            toggleFavorite(name);
+            fillConferenceDetail(row);
+            rerender();
+            return;
+          }
+          if (action === "pipeline-add") {
+            addToPipeline(name);
+            fillConferenceDetail(row);
+            rerender();
+            return;
+          }
+          if (action === "pipeline-remove") {
+            removeFromPipeline(name);
+            fillConferenceDetail(row);
+            rerender();
+            return;
+          }
+          if (action === "saved-add") {
+            addSavedTrip(name);
+            fillConferenceDetail(row);
+            rerender();
+            return;
+          }
+          if (action === "saved-remove") {
+            removeSavedTrip(name);
+            fillConferenceDetail(row);
+            rerender();
+            return;
+          }
+        });
+        el.conferenceDetailDialog.addEventListener("close", () => {
+          state.detailConferenceName = "";
+          setDetailUrlParam(null);
+        });
+      }
       document.addEventListener("keydown", (event) => {
         if (!event.altKey) return;
         const key = event.key.toLowerCase();
@@ -1235,18 +3730,60 @@
           resetFilters();
         }
       });
+      function isTypingTarget(target) {
+        if (!target || !target.tagName) return false;
+        const t = target.tagName.toLowerCase();
+        if (t === "input" || t === "textarea" || t === "select") return true;
+        return Boolean(target.isContentEditable);
+      }
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "?" || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (isTypingTarget(event.target)) return;
+        event.preventDefault();
+        openShortcutsDialog();
+      });
+      if (el.footerShortcutsBtn) {
+        el.footerShortcutsBtn.addEventListener("click", () => openShortcutsDialog());
+      }
+      if (el.shortcutsCloseBtn) {
+        el.shortcutsCloseBtn.addEventListener("click", () => closeShortcutsDialog());
+      }
+      if (el.exportPipelineCsvBtn) el.exportPipelineCsvBtn.addEventListener("click", () => exportPipelineCsv());
+      if (el.exportPipelineIcsBtn) el.exportPipelineIcsBtn.addEventListener("click", () => exportPipelineIcsBundle());
+      if (el.exportTripsCsvBtn) el.exportTripsCsvBtn.addEventListener("click", () => exportTripsCsv());
+      if (el.exportTripsIcsBtn) el.exportTripsIcsBtn.addEventListener("click", () => exportTripsIcsBundle());
     }
 
     async function start() {
       state.geocodeCache = loadGeocodeCache();
+      readAppMetaFromUrl();
+      loadPersonaAndSectionFromStorage();
+      loadPipeline();
+      loadSavedTrips();
+      loadFavorites();
+      loadNotes();
       loadFilters();
       readFiltersFromUrl();
+      maybeApplySpeakerDiscoverDefaults();
       loadUiPrefs();
+      loadPlanningPrefs();
+      if (isAttendeeMode()) {
+        clearSpeakerOnlyFilters();
+        applyFilterValuesToInputs();
+      }
       bindEvents();
+      if (el.personaSelect) el.personaSelect.value = state.personaMode;
+      updatePersonaHint();
+      applyAppSectionUI();
       setActiveTab(state.activeTab);
+      setAdvancedFiltersExpanded(!isSmallScreen());
       updateMapSourceButtons();
       try {
         await loadCsvAndRender();
+        openOnboardingIfNeeded();
+        window.setTimeout(() => {
+          if (!el.onboardingDialog?.open) tryOpenDetailFromUrl();
+        }, 300);
       } catch (err) {
         console.error(err);
         document.body.innerHTML = `

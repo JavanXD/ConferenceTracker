@@ -1,0 +1,10 @@
+.env
+.env.local
+*.pem
+.DS_Store
+conferences copy.csv
+
+TODO.md
+
+# Discovery tooling (scrapers + pipeline) — local only for now
+/discovery/
