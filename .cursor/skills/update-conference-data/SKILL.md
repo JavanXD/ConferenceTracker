@@ -4,145 +4,93 @@ description: >-
   Add or update rows in conferences.csv for the Conference Tracker dashboard.
   Use when the user asks to add a conference, update deadlines/links/location,
   fix missing data, verify CFP/CfT/CfW, enrich notes, or edit conference catalog
-  entries. Requires web research from official sources before writing values.
+  entries. Schema: docs/CATALOG.md. Requires web research from official sources before writing values.
 ---
 
 # Update conference data (`conferences.csv`)
 
+**Schema, enums, UI mapping:** [`docs/CATALOG.md`](../../../docs/CATALOG.md) — do not duplicate column lists here.  
+**PR workflow:** [CONTRIBUTING.md](../../../CONTRIBUTING.md).
+
 ## Scope
 
-- **In scope:** `conferences.csv` only (the static catalog the app loads).
-- **Out of scope:** `index.html` / `app.js` unless the user explicitly asks for UI changes.
-- **PR workflow:** See [CONTRIBUTING.md](../../../CONTRIBUTING.md). Column reference: [reference.md](reference.md).
+- **In scope:** `conferences.csv` only.
+- **Out of scope:** `index.html` / `app.js` unless the user asks for UI changes.
 
 ## Before editing
 
-1. **Read the header row** in `conferences.csv` — never reorder or rename columns.
-2. **Search for an existing row** by `conference_name` (and region/edition if the name is ambiguous).
-3. **Research on the web** — do not rely on training data alone for dates, deadlines, or URLs.
+1. Read the CSV **header** — never reorder columns ([`docs/CATALOG.md`](../../../docs/CATALOG.md)).
+2. **Search** for an existing row (name, similar spelling, same domain).
+3. **Research on the web** — not training data alone.
 
 ## Update vs add
 
 | Situation | Action |
 |-----------|--------|
-| Same conference already listed | **Update** only changed fields; keep verified values |
-| New event or distinct regional edition | **Add** one new row |
-| Duplicate names (e.g. merged editions) | **Merge** into one row per user intent; remove obsolete duplicate if asked |
+| Already listed | **Update** changed fields only |
+| New or distinct regional edition | **Add** one row |
+| Duplicates | **Merge** per user intent |
 
-Match naming to how the community knows the event (official branding). Prefer one row per logical conference the dashboard should show.
+**Never** two rows for the same edition. Batch merges from `discovery/07_runtime/proposals/`: run `python discovery/06_review/step_01_validate_proposal.py`; see [00_HUMAN_REVIEW.md](../../../discovery/06_review/00_HUMAN_REVIEW.md).
 
-### Duplicate safety (required)
+## Research
 
-- **Search the full catalog** before any **add** — exact name, similar name, and same official domain.
-- If a row already exists (even under slightly different spelling), **update that row** — do not add a second.
-- **Never** create two rows for the same conference edition.
-- When merging from `discovery/07_runtime/proposals/`: respect `proposed_action`, `matched_catalog_name`, and `risk_flags`; run `python discovery/06_review/step_01_validate_proposal.py` on the proposal file first if the user is doing a batch merge. See [`discovery/06_review/00_HUMAN_REVIEW.md`](../../../discovery/06_review/00_HUMAN_REVIEW.md).
+Use **WebSearch** / **WebFetch** until you can cite official evidence.
 
-## Research (required)
+**Source order:** (1) official site + CFP pages (2) Sessionize / PaperCall / Pretalx / vendor CFP (3) organizer posts if site stale (4) aggregators **as leads only** — verify before writing.
 
-Use **WebSearch** / **WebFetch** (or equivalent) until you can cite official evidence.
+**Collect:** start/end `YYYY-MM-DD`, `MM-DD` deadlines (or `TBD`), direct URLs, city/country, type, IANA timezone, sponsorship if stated, concise `notes`. **`submission_tracks`:** only non-obvious extras (`CTF`, `Panels`, `Villages`) — omit `Talks`/`Trainings`/`Workshops` when deadlines or `cft_`/`cfw_` links already imply them ([`docs/CATALOG.md` — Name badges](../../../docs/CATALOG.md#name-badges)).
 
-### Source priority
+### Dates when the row is stale or empty
 
-1. **Official conference website** — dates, location, CFP/CfT/CfW pages
-2. **Official submission platforms** — [Sessionize](https://sessionize.com), [PaperCall](https://www.papercall.io), [Pretalx](https://pretalx.com), vendor CFP portals (e.g. Black Hat awards platform)
-3. **Official organizer posts** — only when the site is stale
-4. **Aggregators / directories** — leads only; **verify** on an official source before writing
+1. Official site (blog, FAQ, archives) + **CfP Watch** / submission portals.
+2. Verified listings (e.g. Crossweb) — confirm on organizer or official source.
+3. **Write:** latest edition start/end for this row’s city; matching `cfp_deadline_MM-DD` (not another city’s cycle); edition history + relocation in `notes`; `venue_pattern` `Rotating` if city/format changed; `last_verified_date` = today.
 
-### What to collect
-
-- Conference **start/end** dates (`YYYY-MM-DD`)
-- **CfP / CfT / CfW / CfV** open or closed; **MM-DD** deadline when published (else `TBD`)
-- **Direct URLs:** main site or CFP page → `website_or_cfp_link`; dedicated CfT/CfW/CfV → `cft_link`, `cfw_link`, `cfv_link`
-- **City, country**, **In-Person / Hybrid / Virtual**, **IANA timezone**
-- **Tracks** (talks, trainings, workshops, CTF, etc.) for `submission_tracks` and `accepts_*` flags
-- **Sponsorship** (travel/hotel) when stated officially
-- Short **notes** with evidence (portal name, “CFP open, close date not published”, prior-year estimate, etc.)
+Example pattern (Code Europe Kraków): conference `2025-06-30`–`2025-07-01`, CfP `03-30`, notes list 2023–2025 Kraków + 2026 Warsaw on main site.
 
 ### Hard limits
 
-- **Never invent** exact dates, deadlines, or URLs.
-- Use **`TBD`** or **`Unknown`** when not verifiable.
-- Prior-year or pattern-based guesses → prefix **`Estimated`** in `notes` and keep fields `TBD`/`Unknown` unless the user explicitly wants estimates in the cell.
-- **PaperCall/Sessionize open with no close date:** `cfp_deadline_MM-DD` = `TBD`, `accepts_cfp` = `Yes` if submissions are open, explain in `notes`.
-
-## Field rules (summary)
-
-Full column list and enums: [reference.md](reference.md).
-
-- **Enums only** — e.g. `Yes|No|Unknown`, `High|Medium|Low`, `Academic|Industry|Mixed|Unknown`, `In-Person|Hybrid|Virtual`
-- **Recurring deadlines:** `MM-DD` or `TBD` (`cfp_deadline_MM-DD`, etc.)
-- **Calendar dates:** `YYYY-MM-DD` or `TBD` (conference dates, `last_verified_date`)
-- **`cfp_deadline_month`:** English month name (e.g. `March`) or `TBD`
-- **`submission_tracks`:** pipe-separated, e.g. `Talks|Workshops|Trainings`
-- **`country`:** normalized names (`United States`, `United Kingdom`, `Chile`, …)
-- **`timezone`:** valid IANA id (`Europe/Berlin`, `America/Los_Angeles`, …)
-- **`last_verified_date`:** set to **today** (`YYYY-MM-DD`) for **every row you touch**
-- **`notes`:** one line preferred; include source hints (no markdown links required)
-
-### How the app uses deadlines
-
-- `MM-DD` is interpreted against the **conference edition year** from `conference_start_date`.
-- If the deadline’s month-day is **after** the conference start in the calendar year, the dashboard treats it as the **previous** year (typical for CfPs months before the event).
-- Open CfP with a deadline already passed for the current edition → row may not show as “actionable”; fix dates or notes rather than forcing wrong `MM-DD`.
+- **Never invent** dates, deadlines, or URLs.
+- **`TBD` / `Unknown`** when not verifiable.
+- Prefer **last official edition** over `TBD` conference dates for recurring events; `Estimated …` in `notes` only when inferring without an announcement.
+- Open CfP, no close date → deadline `TBD`, URL in link column, note in `notes`.
 
 ## CSV editing
 
-- Preserve **exact column order** and header names.
-- Fields containing **commas** must be **double-quoted**; escape `"` as `""`.
-- Leave optional link columns **empty** when there is no dedicated URL (do not duplicate the main URL without reason).
-- Avoid wide reformatting of unrelated rows.
-- After edits, skim for **ragged rows** (extra commas, broken quotes).
+Quoted commas; empty optional links; bump `last_verified_date` on every touched row; no wide unrelated reformats.
 
-## Workflow checklist
-
-Copy and track:
+## Checklist
 
 ```
-- [ ] Existing row located (or confirmed new)
-- [ ] Official site + CFP platform checked
-- [ ] Dates/deadlines/links verified (or TBD/Unknown)
-- [ ] Enums and formats match reference
-- [ ] last_verified_date set on touched rows
-- [ ] notes mention sources / open CFP without close date
-- [ ] Summary prepared for user
+- [ ] Row located or confirmed new
+- [ ] Official site + CFP checked
+- [ ] Fields match docs/CATALOG.md (or TBD/Unknown)
+- [ ] last_verified_date + notes/sources
+- [ ] User summary ready
 ```
 
-## Deliverable to the user
+## Deliverable
 
-After editing, report:
+1. Added / updated counts and names  
+2. Key field changes  
+3. High-priority gaps still `TBD`/`Unknown`  
+4. Sources when non-obvious  
 
-1. **Added** / **updated** counts
-2. **Conference names** touched
-3. **Key changes** (deadlines, links, location, accepts_*)
-4. **Still missing** on High-priority rows (TBD/Unknown on critical fields), if any
-5. **Sources** used (URLs or portal names) when anything was non-obvious
+## Discovery pipeline (optional)
 
-## Leads from extractors / pipeline (optional)
+`discovery/` never writes `conferences.csv`. Merge **approved** proposals after human review and official re-check. See [discovery/README.md](../../../discovery/README.md).
 
-Conference **names and high-level hints** from the discovery stack:
+## Verify locally (optional)
 
-- **Discovery tooling** ([`discovery/README.md`](../../../discovery/README.md), [`00_STEP_ORDER.md`](../../../discovery/00_STEP_ORDER.md), gitignored) — numbered steps `02_collect` → `03_extract` → `04_orchestrate` → proposals in `07_runtime/`.
-
-The **pipeline never writes** `conferences.csv`. On GitHub Actions (when enabled), proposals may include **web research** JSON in `research_notes`. Use this skill when the **human** asks to merge **approved** rows. Run `python discovery/06_review/step_01_validate_proposal.py` first for batch merges. Verify on **official** sites; respect `proposed_action` and `risk_flags`.
-
-## Optional verification
-
-Load the app locally (`python3 -m http.server 8000` → `index.html`) and confirm the row renders without CSV warnings in the browser console.
+`python3 -m http.server 8000` → `index.html`; no CSV console warnings; deadline filters sane.
 
 ## Examples
 
-**CfP open on PaperCall, no close date published**
-
-- `accepts_cfp`: `Yes`
-- `cfp_deadline_MM-DD`: `TBD`
-- `website_or_cfp_link`: PaperCall URL
-- `notes`: … CFP open on PaperCall; close date not published …
-
-**Update deadlines only**
-
-- Change `cfp_deadline_MM-DD`, `cfp_deadline_month`, links; bump `last_verified_date`; leave unrelated fields unchanged.
-
-**New BSides / village event**
-
-- New row; `priority_level` usually `Low` or `Medium` unless user specifies; research pretalx/sessionize CFP; set `venue_pattern` when known (`Unknown` if not).
+| Case | Do |
+|------|-----|
+| CfP open, no close | `cfp_*` = `TBD`, PaperCall URL, note “open, close not published” |
+| CfP closed | Keep `MM-DD`; keep conference dates |
+| Backfill old editions only | Latest start/end; 2023, 2024… in `notes`; CfP close for **that** edition |
+| New BSides | New row; pretalx/sessionize; `venue_pattern` when known |
+| City moved | Note + separate row if user wants new city tracked |

@@ -44,9 +44,6 @@
       "city",
       "country",
       "cfp_deadline_month",
-      "accepts_cfp",
-      "accepts_cft",
-      "accepts_cfw",
       "cfp_deadline",
       "cft_deadline",
       "cfw_deadline",
@@ -76,13 +73,10 @@
         acceptsCfp: "",
         acceptsCft: "",
         acceptsCfw: "",
-        acceptsCfv: "",
         cftOrCfw: "",
         academicLevel: "",
         sponsorship: "",
         conferenceType: "",
-        cfpMonth: "",
-        venuePattern: "",
         deadlineWindow: "",
         favoritesOnly: "",
         region: "",
@@ -132,12 +126,9 @@
       acceptsCfpFilter: document.getElementById("acceptsCfpFilter"),
       acceptsCftFilter: document.getElementById("acceptsCftFilter"),
       acceptsCfwFilter: document.getElementById("acceptsCfwFilter"),
-      acceptsCfvFilter: document.getElementById("acceptsCfvFilter"),
       academicFilter: document.getElementById("academicFilter"),
       sponsorshipFilter: document.getElementById("sponsorshipFilter"),
       typeFilter: document.getElementById("typeFilter"),
-      monthFilter: document.getElementById("monthFilter"),
-      venuePatternFilter: document.getElementById("venuePatternFilter"),
       sortFilter: document.getElementById("sortFilter"),
       activeFilterMeta: document.getElementById("activeFilterMeta"),
       activeFilterChips: document.getElementById("activeFilterChips"),
@@ -249,9 +240,7 @@
 
     function planningYearFromRow(row) {
       if (!row) return new Date().getFullYear();
-      const d = normalize(row.conference_start_date);
-      const m = /^(\d{4})-/.exec(d);
-      return m ? parseInt(m[1], 10) : new Date().getFullYear();
+      return referenceYearForRow(row);
     }
 
     function normalizePipelineItem(raw, yearFallback) {
@@ -1080,15 +1069,52 @@
       if (el.conferenceDetailNotes) {
         el.conferenceDetailNotes.value = state.notes[name] || "";
       }
-      const nd = getNextDeadlineInfo(row);
+      let nd = getNextDeadlineInfo(row, {
+        includePastFallback: true,
+        includeProjectedRecurring: true
+      });
+      if (!nd) nd = getEventTimingEstimate(row);
       const body = [];
       body.push('<dl class="detail-dl">');
       body.push(`<dt>Where</dt><dd>${escapeHtml(normalize(row.city))}, ${escapeHtml(normalize(row.country))} · ${escapeHtml(normalize(row.conference_type))}</dd>`);
-      body.push(`<dt>Dates</dt><dd>${escapeHtml(normalize(row.conference_start_date))} → ${escapeHtml(normalize(row.conference_end_date))}</dd>`);
+      const dateNote = isProjectedEditionDates(row)
+        ? ' <span class="detail-date-est">(next occurrence est. from last edition)</span>'
+        : "";
+      body.push(
+        `<dt>Dates</dt><dd>${escapeHtml(formatDisplayConferenceDate(row, "start"))} → ${escapeHtml(formatDisplayConferenceDate(row, "end"))}${dateNote}</dd>`
+      );
       if (!isAttendeeMode()) {
         body.push(`<dt>CfP mo.</dt><dd>${escapeHtml(normalize(row.cfp_deadline_month))}</dd>`);
-        body.push(`<dt>Tracks</dt><dd>${escapeHtml(normalize(row.submission_tracks))}</dd>`);
-        body.push(`<dt>Due</dt><dd>${nd ? `${escapeHtml(nd.label)} ${escapeHtml(nd.monthDay)} (${nd.daysUntil}d)` : "—"}</dd>`);
+        const deadlineLines = [
+          ["CfP", row.cfp_deadline, row.website_or_cfp_link],
+          ["CfT", row.cft_deadline, row.cft_link],
+          ["CfW", row.cfw_deadline, row.cfw_link],
+          ["CfV", row.cfv_deadline, row.cfv_link]
+        ]
+          .map(([label, dl, url]) => {
+            const date = normalize(dl);
+            const urlClean = normalize(url);
+            const hasDate = Boolean(date) && date.toUpperCase() !== "TBD";
+            let dateText = hasDate ? escapeHtml(date) : "—";
+            if (!hasDate && urlClean && /^https?:\/\//i.test(urlClean)) {
+              dateText = submissionPortalIndicator(urlClean).glyph;
+            }
+            if (urlClean && /^https?:\/\//i.test(urlClean)) {
+              const { platform } = submissionPortalIndicator(urlClean);
+              const linkLabel = hasDate
+                ? dateText
+                : `${dateText} ${escapeHtml(platform)}`;
+              return `${label}: <a href="${escapeHtml(urlClean)}" target="_blank" rel="noopener noreferrer">${linkLabel}</a>`;
+            }
+            return `${label}: ${dateText}`;
+          })
+          .join(" · ");
+        body.push(`<dt>Deadlines</dt><dd class="detail-links">${deadlineLines}</dd>`);
+        const trackList = allSubmissionTracksForDisplay(row);
+        body.push(
+          `<dt>Tracks</dt><dd>${trackList.length ? escapeHtml(trackList.join(" | ")) : "—"}</dd>`
+        );
+        body.push(`<dt>Next due</dt><dd>${nd ? escapeHtml(formatNextDeadlineText(nd)) : "—"}</dd>`);
       }
       const linkParts = [];
       if (normalize(row.website_or_cfp_link)) {
@@ -1751,6 +1777,10 @@
         if (!raw) return;
         const parsed = JSON.parse(raw);
         state.filters = { ...state.filters, ...parsed };
+        delete state.filters.acceptsCfv;
+        delete state.filters.cfpMonth;
+        delete state.filters.venuePattern;
+        if (state.filters.sortBy === "month_name") state.filters.sortBy = "attendees_name";
       } catch (err) {
         console.warn("Could not parse saved filters", err);
       }
@@ -1782,22 +1812,43 @@
       if (el.acceptsCfpFilter) el.acceptsCfpFilter.value = state.filters.acceptsCfp;
       if (el.acceptsCftFilter) el.acceptsCftFilter.value = state.filters.acceptsCft;
       if (el.acceptsCfwFilter) el.acceptsCfwFilter.value = state.filters.acceptsCfw;
-      if (el.acceptsCfvFilter) el.acceptsCfvFilter.value = state.filters.acceptsCfv;
       if (el.academicFilter) el.academicFilter.value = state.filters.academicLevel;
       if (el.sponsorshipFilter) el.sponsorshipFilter.value = state.filters.sponsorship;
       if (el.typeFilter) el.typeFilter.value = state.filters.conferenceType;
-      if (el.monthFilter) el.monthFilter.value = state.filters.cfpMonth;
-      if (el.venuePatternFilter) el.venuePatternFilter.value = state.filters.venuePattern;
       if (el.favoritesFilter) el.favoritesFilter.value = state.filters.favoritesOnly;
       if (el.sortFilter) el.sortFilter.value = state.filters.sortBy || "attendees_name";
     }
 
-    function fillOptions(selectEl, values) {
+    function filterOptionLabel(key, value) {
+      if (key === "travel_accommodation_sponsorship" && toLower(value) === "unknown") return "Unset";
+      if (
+        (key === "accepts_cfp" ||
+          key === "accepts_cft" ||
+          key === "accepts_cfw" ||
+          key === "accepts_cfv") &&
+        value === "Yes"
+      ) {
+        return "Has deadline";
+      }
+      if (
+        (key === "accepts_cfp" ||
+          key === "accepts_cft" ||
+          key === "accepts_cfw" ||
+          key === "accepts_cfv") &&
+        value === "No"
+      ) {
+        return "No deadline";
+      }
+      return value;
+    }
+
+    function fillOptions(selectEl, values, valueKey) {
       const current = selectEl.value;
       const options = ["", ...values];
       selectEl.innerHTML = options.map((v) => {
         const selected = v === current ? "selected" : "";
-        return `<option value="${escapeHtml(v)}" ${selected}>${v || "All"}</option>`;
+        const label = v ? filterOptionLabel(valueKey, v) : "All";
+        return `<option value="${escapeHtml(v)}" ${selected}>${escapeHtml(label)}</option>`;
       }).join("");
     }
 
@@ -1824,12 +1875,7 @@
         priority_level: pickValue(rawRow, ["priority_level"]),
         attendees_500_plus: pickValue(rawRow, ["attendees_500_plus"]),
         academic_acceptance_level: pickValue(rawRow, ["academic_acceptance_level"]),
-        cfp_deadline_month: pickValue(rawRow, ["cfp_deadline_month"]),
         submission_tracks: pickValue(rawRow, ["submission_tracks"]),
-        accepts_cfp: pickValue(rawRow, ["accepts_cfp"], "Unknown"),
-        accepts_cft: pickValue(rawRow, ["accepts_cft"], "Unknown"),
-        accepts_cfw: pickValue(rawRow, ["accepts_cfw"], "Unknown"),
-        accepts_cfv: pickValue(rawRow, ["accepts_cfv"], "Unknown"),
         travel_accommodation_sponsorship: pickValue(rawRow, ["travel_accommodation_sponsorship"]),
         cfp_deadline: pickValue(rawRow, ["cfp_deadline", "cfp_deadline_MM-DD"], "TBD"),
         cft_deadline: pickValue(rawRow, ["cft_deadline", "cft_deadline_MM-DD"], "TBD"),
@@ -1850,6 +1896,106 @@
         notes: pickValue(rawRow, ["notes"]),
         last_verified_date: pickValue(rawRow, ["last_verified_date"])
       };
+    }
+
+    const MONTH_NAMES = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ];
+
+    function cfpDeadlineMonthFromDeadline(deadline) {
+      const clean = normalize(deadline);
+      if (!clean || clean.toUpperCase() === "TBD") return "TBD";
+      const match = clean.match(/^(\d{2})-(\d{2})$/);
+      if (!match) return "TBD";
+      const monthNum = parseInt(match[1], 10);
+      if (monthNum < 1 || monthNum > 12) return "TBD";
+      return MONTH_NAMES[monthNum - 1];
+    }
+
+    function acceptsFromDeadline(deadline) {
+      const d = normalize(deadline);
+      if (!d || d.toUpperCase() === "TBD") return "No";
+      return isValidMonthDay(d) ? "Yes" : "No";
+    }
+
+    function deriveAcceptsFromDeadlines(row) {
+      row.accepts_cfp = acceptsFromDeadline(row.cfp_deadline);
+      row.accepts_cft = acceptsFromDeadline(row.cft_deadline);
+      row.accepts_cfw = acceptsFromDeadline(row.cfw_deadline);
+      row.accepts_cfv = acceptsFromDeadline(row.cfv_deadline);
+      row.cfp_deadline_month = cfpDeadlineMonthFromDeadline(row.cfp_deadline);
+    }
+
+    function submissionTracksIncludeToken(tracksValue, token) {
+      const want = toLower(token);
+      return normalize(tracksValue)
+        .split("|")
+        .map((t) => toLower(normalize(t)))
+        .some((t) => t === want);
+    }
+
+    function comparableUrl(url) {
+      const clean = normalize(url);
+      if (!clean || !/^https?:\/\//i.test(clean)) return "";
+      try {
+        const u = new URL(clean);
+        const host = u.hostname.toLowerCase().replace(/^www\./, "");
+        const path = u.pathname.replace(/\/+$/, "") || "";
+        return `${host}${path}`;
+      } catch {
+        return "";
+      }
+    }
+
+    /** Drop mistaken per-type links (homepage in CfW without a workshop program, etc.). */
+    function sanitizePerTypeSubmissionLinks(row) {
+      const issues = [];
+      const website = comparableUrl(row.website_or_cfp_link);
+
+      if (normalize(row.cfw_link)) {
+        const hasWorkshops = rowHasSubmissionTrack(row, "Workshops");
+        const cfw = comparableUrl(row.cfw_link);
+        if (!hasWorkshops) {
+          issues.push("cleared cfw_link (no workshop program)");
+          row.cfw_link = "";
+        } else if (
+          website &&
+          cfw === website &&
+          acceptsFromDeadline(row.cfw_deadline) !== "Yes"
+        ) {
+          issues.push("cleared cfw_link (duplicate of website_or_cfp_link)");
+          row.cfw_link = "";
+        }
+      }
+
+      if (normalize(row.cft_link)) {
+        const hasTrainings = rowHasSubmissionTrack(row, "Trainings");
+        const cft = comparableUrl(row.cft_link);
+        if (!hasTrainings) {
+          issues.push("cleared cft_link (no training program)");
+          row.cft_link = "";
+        } else if (
+          website &&
+          cft === website &&
+          acceptsFromDeadline(row.cft_deadline) !== "Yes"
+        ) {
+          issues.push("cleared cft_link (duplicate of website_or_cfp_link)");
+          row.cft_link = "";
+        }
+      }
+
+      return issues;
     }
 
     function isValidMonthDay(value) {
@@ -1903,10 +2049,6 @@
             return;
           }
 
-          row.accepts_cfp = sanitizeEnum(row.accepts_cfp, ["Yes", "No", "Unknown"], "Unknown");
-          row.accepts_cft = sanitizeEnum(row.accepts_cft, ["Yes", "No", "Unknown"], "Unknown");
-          row.accepts_cfw = sanitizeEnum(row.accepts_cfw, ["Yes", "No", "Unknown"], "Unknown");
-          row.accepts_cfv = sanitizeEnum(row.accepts_cfv, ["Yes", "No", "Unknown"], "Unknown");
           row.venue_pattern = sanitizeEnum(row.venue_pattern, ["Rotating", "Mostly Fixed", "Fixed", "Unknown"], "Unknown");
 
           if (!isValidMonthDay(row.cfp_deadline)) {
@@ -1924,6 +2066,14 @@
           if (!isValidMonthDay(row.cfv_deadline)) {
             issues.push(`invalid cfv_deadline "${row.cfv_deadline}"`);
             row.cfv_deadline = "TBD";
+          }
+
+          deriveAcceptsFromDeadlines(row);
+
+          const linkIssues = sanitizePerTypeSubmissionLinks(row);
+          if (linkIssues.length) {
+            issues.push(...linkIssues);
+            deriveAcceptsFromDeadlines(row);
           }
 
           if (!isValidIsoDate(row.conference_start_date)) {
@@ -1976,11 +2126,12 @@
       return ` data-tip="${escapeAttr(clean)}"`;
     }
 
-    function linkOrText(url) {
+    function linkOrText(url, label) {
       const clean = normalize(url);
       if (!clean) return "";
       if (/^https?:\/\//i.test(clean)) {
-        return `<a href="${escapeHtml(clean)}" target="_blank" rel="noopener noreferrer">link</a>`;
+        const text = normalize(label) || "↗";
+        return `<a href="${escapeHtml(clean)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`;
       }
       return escapeHtml(clean);
     }
@@ -1989,6 +2140,55 @@
       const clean = normalize(value);
       if (!clean) return "";
       return `<span class="cell-ellipsis"${tipDataAttr(clean)}>${escapeHtml(clean)}</span>`;
+    }
+
+    const DEADLINE_IMPLIED_TRACKS = {
+      cfp_deadline: "Talks",
+      cft_deadline: "Trainings",
+      cfw_deadline: "Workshops"
+    };
+
+    function parseSubmissionTrackList(tracksValue) {
+      return normalize(tracksValue)
+        .split("|")
+        .map((t) => normalize(t))
+        .filter(Boolean);
+    }
+
+    /** Talks / Trainings / Workshops implied by deadline MM-DD or matching link (not shown as name badges). */
+    function tracksImpliedByRow(row) {
+      const implied = new Set();
+      Object.entries(DEADLINE_IMPLIED_TRACKS).forEach(([deadlineKey, trackName]) => {
+        if (acceptsFromDeadline(row[deadlineKey]) === "Yes") implied.add(trackName);
+      });
+      if (normalize(row.cft_link)) implied.add("Trainings");
+      if (normalize(row.cfw_link)) implied.add("Workshops");
+      return implied;
+    }
+
+    function rowHasSubmissionTrack(row, token) {
+      if (submissionTracksIncludeToken(row.submission_tracks, token)) return true;
+      return tracksImpliedByRow(row).has(token);
+    }
+
+    function allSubmissionTracksForDisplay(row) {
+      const implied = tracksImpliedByRow(row);
+      const listed = parseSubmissionTrackList(row.submission_tracks);
+      const out = [];
+      const seen = new Set();
+      [...implied, ...listed].forEach((t) => {
+        if (!seen.has(t)) {
+          seen.add(t);
+          out.push(t);
+        }
+      });
+      return out;
+    }
+
+    function extraSubmissionTracks(row) {
+      const listed = parseSubmissionTrackList(row.submission_tracks);
+      const implied = tracksImpliedByRow(row);
+      return listed.filter((t) => !implied.has(t));
     }
 
     function renderTrackBadges(tracksValue) {
@@ -2010,6 +2210,12 @@
         const title = conf ? conf.title : track;
         return `<span class="track-badge"${tipDataAttr(title)}>${escapeHtml(label)}</span>`;
       }).join("")}</span>`;
+    }
+
+    function renderExtraTrackBadges(row) {
+      const extra = extraSubmissionTracks(row);
+      if (extra.length === 0) return "";
+      return renderTrackBadges(extra.join("|"));
     }
 
     function renderAcceptanceLevelCell(value) {
@@ -2048,7 +2254,7 @@
         "Greece"
       ]),
       americas: new Set(["United States", "Canada", "Brazil", "Argentina", "Mexico", "Chile"]),
-      apac: new Set(["Japan", "Singapore", "India", "Australia", "Indonesia", "Nepal"]),
+      apac: new Set(["Japan", "Singapore", "India", "Australia", "Indonesia", "Nepal", "Taiwan"]),
       mea: new Set(["Israel", "United Arab Emirates", "Saudi Arabia", "Bahrain", "Qatar"]),
       africa: new Set(["South Africa", "Kenya"])
     };
@@ -2087,6 +2293,7 @@
       "South Africa": "ZA",
       Spain: "ES",
       Switzerland: "CH",
+      Taiwan: "TW",
       "United Arab Emirates": "AE",
       "United Kingdom": "GB",
       "United States": "US"
@@ -2098,11 +2305,25 @@
         .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
     }
 
+    function isGlobalCountry(country) {
+      const c = toLower(country);
+      return c === "global" || c === "worldwide" || c === "international";
+    }
+
+    function globalCountryFlagSvg() {
+      return `<svg class="country-flag-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93Zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39Z"/></svg>`;
+    }
+
     function renderCountryFlag(countryValue) {
       const country = normalize(countryValue);
       if (!country || country === "TBD" || country === "Various") return "—";
+      if (isGlobalCountry(country)) {
+        return `<span class="country-flag country-flag-global"${tipDataAttr(country)} aria-label="${escapeHtml(country)}">${globalCountryFlagSvg()}</span>`;
+      }
       const iso2 = countryToIso2[country];
-      if (!iso2) return escapeHtml(country);
+      if (!iso2) {
+        return `<span class="country-flag country-flag-text"${tipDataAttr(country)} aria-label="${escapeHtml(country)}">${escapeHtml(country)}</span>`;
+      }
       return `<span class="country-flag"${tipDataAttr(country)} aria-label="${escapeHtml(country)}">${iso2ToFlagEmoji(iso2)}</span>`;
     }
 
@@ -2119,11 +2340,13 @@
       const name = normalize(row.conference_name);
       const enc = encodeURIComponent(name);
       const display = escapeHtml(name);
-      return `<button type="button" class="name-detail-btn" data-action="open-detail" data-cname="${enc}" aria-label="Open details for ${escapeHtml(name)}"><span class="cell-ellipsis">${display}</span></button>`;
+      const extraTracks = !isAttendeeMode() ? renderExtraTrackBadges(row) : "";
+      const extras = extraTracks ? ` <span class="name-extra-tracks">${extraTracks}</span>` : "";
+      return `<span class="name-cell-wrap"><button type="button" class="name-detail-btn" data-action="open-detail" data-cname="${enc}" aria-label="Open details for ${escapeHtml(name)}" title="${display}"><span class="cell-ellipsis name-ellipsis">${display}</span></button>${extras}</span>`;
     }
 
     function cfpDeadlineWithinDays(row, maxDays) {
-      if (normalize(row.accepts_cfp) !== "Yes") return false;
+      if (acceptsFromDeadline(row.cfp_deadline) !== "Yes") return false;
       const days = daysUntilDeadlineForRow(row, "cfp_deadline", { rollForwardIfPast: false });
       return days !== null && days >= 0 && days <= maxDays;
     }
@@ -2133,11 +2356,16 @@
       const shown = filteredRows.length;
       const favCount = allRows.filter((r) => isFavorite(r.conference_name)).length;
       const largeEvents = filteredRows.filter((r) => toLower(r.attendees_500_plus) === "yes").length;
-      const openCfp = filteredRows.filter((r) => toLower(r.accepts_cfp) === "yes").length;
-      const actionableCfp = filteredRows.filter(isActionableCfp).length;
-      const openCftOrCfw = filteredRows.filter(
-        (r) => toLower(r.accepts_cft) === "yes" || toLower(r.accepts_cfw) === "yes"
+      const hasCfpDeadline = filteredRows.filter(
+        (r) => acceptsFromDeadline(r.cfp_deadline) === "Yes"
       ).length;
+      const actionableCfp = filteredRows.filter(isActionableCfp).length;
+      const hasCftOrCfwDeadline = filteredRows.filter((r) => {
+        return (
+          acceptsFromDeadline(r.cft_deadline) === "Yes" ||
+          acceptsFromDeadline(r.cfw_deadline) === "Yes"
+        );
+      }).length;
       const travelSupport = filteredRows.filter(
         (r) => normalize(r.travel_accommodation_sponsorship) === "Yes"
       ).length;
@@ -2158,7 +2386,7 @@
           { label: "Open CfPs", value: `${actionableCfp}`, action: "actionable_cfp", hint: "CfP open, deadline still ahead" },
           { label: "≤14d", value: `${due14}`, action: "due_14", hint: "CfP due within 14 days" },
           { label: "Travel", value: `${travelSupport}`, action: "travel_support", hint: "Travel or hotel support" },
-          { label: "CfP", value: `${openCfp}`, action: "open_cfp", hint: "Accepts call for papers" },
+          { label: "CfP date", value: `${hasCfpDeadline}`, action: "open_cfp", hint: "Published CfP deadline (MM-DD), any year" },
           { label: "Industry", value: `${industryMixed}`, action: "industry_talks", hint: "Industry or mixed audience" },
           { label: "≤30d", value: `${dueSoon}`, action: "due_30", hint: "Any deadline within 30 days" },
           { label: "Shown", value: `${shown} / ${total}`, action: "clear", hint: "Clear filters" },
@@ -2214,33 +2442,23 @@
           ];
           if (!attendee) {
             cells.push(
-              td("CfP?", toPill(r.accepts_cfp)),
-              td("CfT?", toPill(r.accepts_cft)),
-              td("CfW?", toPill(r.accepts_cfw)),
-              td("CfV?", toPill(r.accepts_cfv)),
               td("Academic", renderAcceptanceLevelCell(r.academic_acceptance_level), "acceptance-col"),
-              td("Tracks", renderTrackBadges(r.submission_tracks)),
               td("Sponsorship", sponsorshipPill(r.travel_accommodation_sponsorship)),
-              td("CfP", renderDeadlineValue(r, "cfp_deadline", "accepts_cfp")),
-              td("CfT", renderDeadlineValue(r, "cft_deadline", "accepts_cft")),
-              td("CfW", renderDeadlineValue(r, "cfw_deadline", "accepts_cfw")),
-              td("CfV", renderDeadlineValue(r, "cfv_deadline", "accepts_cfv"))
+              td("CfP", renderDeadlineCell(r, "cfp_deadline", r.website_or_cfp_link, "CfP")),
+              td("CfT", renderDeadlineCell(r, "cft_deadline", r.cft_link, "CfT")),
+              td("CfW", renderDeadlineCell(r, "cfw_deadline", r.cfw_link, "CfW"))
             );
           }
           cells.push(
-            td("Start", escapeHtml(normalize(r.conference_start_date))),
-            td("End", escapeHtml(normalize(r.conference_end_date))),
+            td("Start", renderConferenceDateCell(r, "start")),
+            td("End", renderConferenceDateCell(r, "end")),
             td("City", escapeHtml(normalize(r.city))),
-            td("Country", renderCountryFlag(r.country), "country-col"),
-            td("Website/CfP", linkOrText(r.website_or_cfp_link))
+            td("Country", renderCountryFlag(r.country), "country-col")
           );
-          if (!attendee) {
-            cells.push(
-              td("CfT Link", linkOrText(r.cft_link)),
-              td("CfW Link", linkOrText(r.cfw_link)),
-              td("CfV Link", linkOrText(r.cfv_link)),
-              td("Next Deadline", renderNextDeadline(r))
-            );
+          if (attendee) {
+            cells.push(td("Site", linkOrText(r.website_or_cfp_link, "Site"), "attendee-only-col"));
+          } else {
+            cells.push(td("Next Deadline", renderNextDeadline(r)));
           }
           cells.push(td("Actions", renderRowActions(r), "table-action-cell"));
           return `<tr>${cells.join("")}</tr>`;
@@ -2275,6 +2493,73 @@
       return Number.isNaN(t) ? null : new Date(t);
     }
 
+    function formatIsoDateLocal(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    /** Calendar year of the next future occurrence of the stored edition month-day. */
+    function referenceYearForRow(row) {
+      const start = conferenceStartDate(row);
+      const today = startOfToday();
+      if (!start) return today.getFullYear();
+      let y = today.getFullYear();
+      let candidate = new Date(y, start.getMonth(), start.getDate());
+      if (candidate < today) {
+        candidate = new Date(y + 1, start.getMonth(), start.getDate());
+      }
+      return candidate.getFullYear();
+    }
+
+    function effectiveConferenceStartDate(row) {
+      const start = conferenceStartDate(row);
+      if (!start) return null;
+      const y = referenceYearForRow(row);
+      return new Date(y, start.getMonth(), start.getDate());
+    }
+
+    function effectiveConferenceEndDate(row) {
+      const start = conferenceStartDate(row);
+      const end = conferenceEndDate(row) || start;
+      if (!start || !end) return null;
+      const yStart = referenceYearForRow(row);
+      let yEnd = yStart + (end.getFullYear() - start.getFullYear());
+      if (yEnd === yStart) {
+        const startOrd = monthDayOrdinal({ month: start.getMonth() + 1, day: start.getDate() });
+        const endOrd = monthDayOrdinal({ month: end.getMonth() + 1, day: end.getDate() });
+        if (endOrd < startOrd) yEnd = yStart + 1;
+      }
+      return new Date(yEnd, end.getMonth(), end.getDate());
+    }
+
+    function isProjectedEditionDates(row) {
+      const start = conferenceStartDate(row);
+      if (!start) return false;
+      return referenceYearForRow(row) !== start.getFullYear();
+    }
+
+    function formatDisplayConferenceDate(row, which) {
+      const eff = which === "start" ? effectiveConferenceStartDate(row) : effectiveConferenceEndDate(row);
+      if (!eff) {
+        return normalize(which === "start" ? row.conference_start_date : row.conference_end_date) || "TBD";
+      }
+      return formatIsoDateLocal(eff);
+    }
+
+    function renderConferenceDateCell(row, which) {
+      const display = formatDisplayConferenceDate(row, which);
+      if (!display || display.toUpperCase() === "TBD") {
+        return escapeHtml(display || "TBD");
+      }
+      const title = isProjectedEditionDates(row)
+        ? "Next occurrence estimated from last known edition; CSV dates unchanged"
+        : "";
+      const cls = isProjectedEditionDates(row) ? " conference-date-est" : "";
+      return `<span class="conference-date${cls}"${title ? tipDataAttr(title) : ""}>${escapeHtml(display)}</span>`;
+    }
+
     function monthDayOrdinal(parsed) {
       return parsed.month * 100 + parsed.day;
     }
@@ -2285,7 +2570,7 @@
       const parsed = parseMonthDay(monthDay);
       if (!parsed) return null;
 
-      const conf = conferenceStartDate(row);
+      const conf = effectiveConferenceStartDate(row);
       if (!conf) {
         const today = startOfToday();
         let deadlineDate = new Date(today.getFullYear(), parsed.month - 1, parsed.day);
@@ -2314,7 +2599,7 @@
       if (options?.rollForwardIfPast !== false) {
         let days = Math.round((deadlineDate - today) / msPerDay);
         if (days < -60) {
-          const confEnd = conferenceEndDate(row);
+          const confEnd = effectiveConferenceEndDate(row);
           const editionOver = confEnd && confEnd < today;
           if (editionOver) {
             deadlineDate = new Date(deadlineYear + 1, parsed.month - 1, parsed.day);
@@ -2334,7 +2619,7 @@
     }
 
     function isActionableCfp(row) {
-      if (normalize(row.accepts_cfp) !== "Yes") return false;
+      if (acceptsFromDeadline(row.cfp_deadline) !== "Yes") return false;
       const dl = normalize(row.cfp_deadline);
       if (!dl || dl.toUpperCase() === "TBD") return false;
       const days = daysUntilDeadlineForRow(row, "cfp_deadline", { rollForwardIfPast: false });
@@ -2349,54 +2634,222 @@
       return set ? set.has(c) : true;
     }
 
-    function getNextDeadlineInfo(row) {
-      const candidates = [
-        { key: "cfp_deadline", label: "CfP", acceptsKey: "accepts_cfp" },
-        { key: "cft_deadline", label: "CfT", acceptsKey: "accepts_cft" },
-        { key: "cfw_deadline", label: "CfW", acceptsKey: "accepts_cfw" },
-        { key: "cfv_deadline", label: "CfV", acceptsKey: "accepts_cfv" }
-      ];
-      let best = null;
+    const DEADLINE_TYPE_CANDIDATES = [
+      { key: "cfp_deadline", label: "CfP" },
+      { key: "cft_deadline", label: "CfT" },
+      { key: "cfw_deadline", label: "CfW" },
+      { key: "cfv_deadline", label: "CfV" }
+    ];
+
+    function resolveDeadlineDateAnnualEstimate(row, deadlineKey) {
+      let date = resolveDeadlineDate(row, deadlineKey, { rollForwardIfPast: false });
+      if (!date) return null;
       const today = startOfToday();
       const msPerDay = 24 * 60 * 60 * 1000;
+      for (let bump = 0; bump < 4; bump += 1) {
+        const daysUntil = Math.round((date - today) / msPerDay);
+        if (daysUntil >= 0) return date;
+        date = new Date(date.getFullYear() + 1, date.getMonth(), date.getDate());
+      }
+      return null;
+    }
 
-      candidates.forEach((c) => {
-        if (normalize(row[c.acceptsKey]) === "No") return;
+    function gatherResolvedDeadlines(row, options = {}) {
+      const useAnnualEstimate = options.annualEstimate === true;
+      const rollForwardIfPast = options.rollForwardIfPast === true;
+      const today = startOfToday();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const resolved = [];
+      DEADLINE_TYPE_CANDIDATES.forEach((c) => {
         const monthDay = normalize(row[c.key]);
         if (!monthDay || monthDay.toUpperCase() === "TBD") return;
-
-        const deadlineDate = resolveDeadlineDate(row, c.key, { rollForwardIfPast: false });
+        const deadlineDate = useAnnualEstimate
+          ? resolveDeadlineDateAnnualEstimate(row, c.key)
+          : resolveDeadlineDate(row, c.key, { rollForwardIfPast });
         if (!deadlineDate) return;
         const daysUntil = Math.round((deadlineDate - today) / msPerDay);
-        if (daysUntil < 0) return;
-
-        if (!best || daysUntil < best.daysUntil) {
-          best = { label: c.label, monthDay, daysUntil, deadlineDate };
-        }
+        resolved.push({ label: c.label, monthDay, daysUntil, deadlineDate });
       });
-      return best;
+      return resolved;
+    }
+
+    function daysSinceConferenceEnd(row) {
+      const end = effectiveConferenceEndDate(row);
+      if (!end) return null;
+      const today = startOfToday();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      return Math.round((today - end) / msPerDay);
+    }
+
+    /** Safe to roll MM-DD forward for Next Due when edition recurs or is still on the horizon. */
+    function eligibleForDeadlineProjection(row) {
+      const today = startOfToday();
+      const effEnd = effectiveConferenceEndDate(row);
+      if (effEnd && effEnd >= today) return true;
+      const effStart = effectiveConferenceStartDate(row);
+      if (effStart && effStart >= today) return true;
+      const vp = normalize(row.venue_pattern);
+      if (vp === "Fixed" || vp === "Mostly Fixed" || vp === "Rotating") return true;
+      const sinceEnd = daysSinceConferenceEnd(row);
+      if (sinceEnd === null) return true;
+      return sinceEnd <= 365;
+    }
+
+    function getEventTimingEstimate(row) {
+      const effStart = effectiveConferenceStartDate(row);
+      if (!effStart) return null;
+      const today = startOfToday();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const monthDay = `${String(effStart.getMonth() + 1).padStart(2, "0")}-${String(effStart.getDate()).padStart(2, "0")}`;
+      const daysUntil = Math.round((effStart - today) / msPerDay);
+      return {
+        label: "Event",
+        monthDay,
+        daysUntil,
+        deadlineDate: effStart,
+        isPast: false,
+        isProjected: true,
+        isEventTiming: true
+      };
+    }
+
+    function pickSoonestUpcoming(resolved) {
+      const upcoming = resolved.filter((r) => r.daysUntil >= 0);
+      if (!upcoming.length) return null;
+      return upcoming.reduce((a, b) => (a.daysUntil < b.daysUntil ? a : b));
+    }
+
+    /** Upcoming only by default; display may project next annual cycle or fall back to past. */
+    function getNextDeadlineInfo(row, options = {}) {
+      const includePastFallback = options.includePastFallback === true;
+      const includeProjectedRecurring = options.includeProjectedRecurring === true;
+
+      const resolved = gatherResolvedDeadlines(row, { rollForwardIfPast: false });
+      if (!resolved.length) return null;
+
+      let best = pickSoonestUpcoming(resolved);
+      if (best) return { ...best, isPast: false, isProjected: false };
+
+      if (includeProjectedRecurring && eligibleForDeadlineProjection(row)) {
+        const projected = gatherResolvedDeadlines(row, { annualEstimate: true });
+        best = pickSoonestUpcoming(projected);
+        if (best) return { ...best, isPast: false, isProjected: true };
+      }
+
+      if (!includePastFallback) return null;
+
+      const bestPast = resolved.reduce((a, b) => (a.daysUntil > b.daysUntil ? a : b));
+      return { ...bestPast, isPast: true, isProjected: false };
+    }
+
+    function formatNextDeadlineText(info) {
+      if (!info) return "";
+      if (info.isPast) return `${info.label} ${info.monthDay} (past)`;
+      if (info.isProjected) return `${info.label} ${info.monthDay} (est. · ${info.daysUntil}d)`;
+      return `${info.label} ${info.monthDay} (${info.daysUntil}d)`;
     }
 
     function renderNextDeadline(row) {
-      const acceptsCfp = normalize(row.accepts_cfp);
-      const acceptsCft = normalize(row.accepts_cft);
-      const acceptsCfw = normalize(row.accepts_cfw);
-      const acceptsCfv = normalize(row.accepts_cfv);
-      if (acceptsCfp === "No" && acceptsCft === "No" && acceptsCfw === "No" && acceptsCfv === "No") {
+      const hasAnyDeadline = ["cfp_deadline", "cft_deadline", "cfw_deadline", "cfv_deadline"].some((key) => {
+        return acceptsFromDeadline(row[key]) === "Yes";
+      });
+      if (!hasAnyDeadline) {
+        const eventEst = getEventTimingEstimate(row);
+        if (eventEst) {
+          return `<span class="pill pill-deadline-est">${escapeHtml(formatNextDeadlineText(eventEst))}</span>`;
+        }
         return `<span class="pill pill-na">N/A</span>`;
       }
-      const info = getNextDeadlineInfo(row);
+      const info = getNextDeadlineInfo(row, {
+        includePastFallback: true,
+        includeProjectedRecurring: true
+      });
       if (!info) return `<span class="pill pill-unknown">TBD</span>`;
-      const cls = info.daysUntil <= 30 ? "pill-deadline-soon" : "pill-deadline-upcoming";
-      return `<span class="pill ${cls}">${info.label} ${escapeHtml(info.monthDay)} (${info.daysUntil}d)</span>`;
+      const cls = info.isPast
+        ? "pill-deadline-past"
+        : info.isProjected
+          ? "pill-deadline-est"
+          : info.daysUntil <= 30
+            ? "pill-deadline-soon"
+            : "pill-deadline-upcoming";
+      return `<span class="pill ${cls}">${escapeHtml(formatNextDeadlineText(info))}</span>`;
     }
 
-    function renderDeadlineValue(row, deadlineKey, acceptsKey) {
+    function submissionPortalIndicator(url) {
+      const clean = normalize(url);
+      let host = "";
+      try {
+        if (clean && /^https?:\/\//i.test(clean)) host = new URL(clean).hostname.toLowerCase();
+      } catch {
+        host = "";
+      }
+      if (host.includes("sessionize.com")) {
+        return { glyph: "📅", platform: "Sessionize" };
+      }
+      if (host.includes("papercall.io")) {
+        return { glyph: "📣", platform: "PaperCall" };
+      }
+      if (host.includes("pretalx.com") || host.includes("pretalx.")) {
+        return { glyph: "📋", platform: "Pretalx" };
+      }
+      if (host.includes("glueup.com")) {
+        return { glyph: "🔗", platform: "Glue Up" };
+      }
+      if (host.includes("awardsplatform.com")) {
+        return { glyph: "🏆", platform: "Awards platform" };
+      }
+      if (host.includes("blackhat.com")) {
+        return { glyph: "🎩", platform: "Black Hat" };
+      }
+      if (host.includes("submittable.com")) {
+        return { glyph: "📨", platform: "Submittable" };
+      }
+      if (host.includes("easychair.org")) {
+        return { glyph: "🪑", platform: "EasyChair" };
+      }
+      return { glyph: "🔗", platform: "Submission portal" };
+    }
+
+    function renderDeadlinePortalMarkup(url, linkKind) {
+      const { glyph, platform } = submissionPortalIndicator(url);
+      const title = `${platform} — ${linkKind} open, deadline not published`;
+      return `<span class="deadline-portal" title="${escapeAttr(title)}" aria-hidden="true">${glyph}</span>`;
+    }
+
+    function wrapDeadlineLink(url, innerHtml, ariaLabel) {
+      const clean = normalize(url);
+      if (!clean || !/^https?:\/\//i.test(clean)) return innerHtml;
+      return `<a class="deadline-link" href="${escapeHtml(clean)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeAttr(ariaLabel)}">${innerHtml}</a>`;
+    }
+
+    function renderDeadlineCell(row, deadlineKey, linkUrl, linkKind) {
       const deadline = normalize(row[deadlineKey]);
-      const accepts = normalize(row[acceptsKey]);
-      if (deadline && deadline.toUpperCase() !== "TBD") return escapeHtml(deadline);
-      if (accepts === "No") return `<span class="pill pill-na">N/A</span>`;
-      return "TBD";
+      const url = normalize(linkUrl);
+      const hasDate = Boolean(deadline) && deadline.toUpperCase() !== "TBD";
+
+      if (!hasDate) {
+        if (url) {
+          const { platform } = submissionPortalIndicator(url);
+          const portal = wrapDeadlineLink(
+            url,
+            renderDeadlinePortalMarkup(url, linkKind),
+            `${linkKind} on ${platform} (deadline not published)`
+          );
+          return portal;
+        }
+        return "";
+      }
+
+      const days = daysUntilDeadlineForRow(row, deadlineKey, { rollForwardIfPast: true });
+      let cls = "deadline-mmdd";
+      if (days !== null) {
+        if (days < 0) cls = "deadline-mmdd deadline-past";
+        else if (days <= 30) cls = "deadline-mmdd deadline-soon";
+      }
+      const dateTitle = "Annual submission deadline (MM-DD); open vs closed is based on days until due";
+      const inner = `<span class="${cls}" title="${dateTitle}">${escapeHtml(deadline)}</span>`;
+      const aria = url ? `${linkKind} deadline ${deadline}, opens submission page` : dateTitle;
+      return wrapDeadlineLink(url, inner, aria);
     }
 
     function toPill(value) {
@@ -2418,8 +2871,10 @@
       if (v === "partial") {
         return `<span class="pill pill-gray">Partial</span>`;
       }
-      const label = raw || "Unknown";
-      return `<span class="pill pill-gray">${escapeHtml(label)}</span>`;
+      if (!raw || v === "unknown" || v === "tbd" || v === "n/a") {
+        return `<span class="sponsor-unset" title="Travel/accommodation sponsorship not verified">—</span>`;
+      }
+      return `<span class="pill pill-gray">${escapeHtml(raw)}</span>`;
     }
 
     function parseCities(cityValue) {
@@ -2443,7 +2898,10 @@
         usa: "United States",
         us: "United States",
         uk: "United Kingdom",
-        uae: "United Arab Emirates"
+        uae: "United Arab Emirates",
+        "chinese taipei": "Taiwan",
+        worldwide: "Global",
+        international: "Global"
       };
       return aliases[lowered] || country;
     }
@@ -2705,16 +3163,13 @@
       const labels = {
         search: "Search",
         attendees: "500+",
-        acceptsCfp: "CfP",
-        acceptsCft: "CfT",
-        acceptsCfw: "CfW",
-        acceptsCfv: "CfV",
+        acceptsCfp: "CfP deadline",
+        acceptsCft: "CfT deadline",
+        acceptsCfw: "CfW deadline",
         cftOrCfw: "CfT or CfW",
         academicLevel: "Academic",
         sponsorship: "Sponsorship",
         conferenceType: "Type",
-        cfpMonth: "CfP Month",
-        venuePattern: "Venue Pattern",
         deadlineWindow: "Deadline",
         favoritesOnly: "Favorites",
         region: "Region",
@@ -2736,6 +3191,17 @@
               ? "only"
               : key === "actionableCfp" && toLower(value) === "yes"
                 ? "open deadlines"
+                : key === "acceptsCfp" || key === "acceptsCft" || key === "acceptsCfw"
+                ? filterOptionLabel(
+                    key === "acceptsCfp"
+                      ? "accepts_cfp"
+                      : key === "acceptsCft"
+                        ? "accepts_cft"
+                        : "accepts_cfw",
+                    value
+                  )
+                : key === "sponsorship" && toLower(value) === "unknown"
+                  ? "Unset"
                 : key === "industryTalks" && toLower(value) === "yes"
                   ? "Industry + Mixed"
                   : key === "inPipeline" && toLower(value) === "yes"
@@ -2789,7 +3255,9 @@
     function compareHeaderSort(a, b, key, direction) {
       const mul = direction === "desc" ? -1 : 1;
       if (key === "conference_start_date" || key === "conference_end_date") {
-        const diff = isoDateOrder(a[key]) - isoDateOrder(b[key]);
+        const diff =
+          isoDateOrder(formatDisplayConferenceDate(a, key === "conference_start_date" ? "start" : "end")) -
+          isoDateOrder(formatDisplayConferenceDate(b, key === "conference_start_date" ? "start" : "end"));
         if (diff !== 0) return diff * mul;
       } else if (key === "cfp_deadline_month") {
         const diff = monthOrder(a[key]) - monthOrder(b[key]);
@@ -2817,12 +3285,6 @@
       const sorted = [...rows];
       if (sortBy === "name_asc") {
         sorted.sort((a, b) => normalize(a.conference_name).localeCompare(normalize(b.conference_name)));
-      } else if (sortBy === "month_name") {
-        sorted.sort((a, b) => {
-          const monthCmp = monthOrder(a.cfp_deadline_month) - monthOrder(b.cfp_deadline_month);
-          if (monthCmp !== 0) return monthCmp;
-          return normalize(a.conference_name).localeCompare(normalize(b.conference_name));
-        });
       } else if (sortBy === "status_name") {
         sorted.sort((a, b) => {
           const sCmp = statusOrder(a.submission_status) - statusOrder(b.submission_status);
@@ -2840,7 +3302,8 @@
         });
       } else if (sortBy === "start_soon") {
         sorted.sort((a, b) => {
-          const dateCmp = isoDateOrder(a.conference_start_date) - isoDateOrder(b.conference_start_date);
+          const dateCmp =
+            isoDateOrder(formatDisplayConferenceDate(a, "start")) - isoDateOrder(formatDisplayConferenceDate(b, "start"));
           if (dateCmp !== 0) return dateCmp;
           return normalize(a.conference_name).localeCompare(normalize(b.conference_name));
         });
@@ -2859,31 +3322,35 @@
       const text = `${normalize(row.conference_name)} ${normalize(row.city)} ${normalize(row.country)}`.toLowerCase();
       if (s.search && !text.includes(s.search.toLowerCase())) return false;
       if (s.attendees && normalize(row.attendees_500_plus) !== s.attendees) return false;
-      if (s.acceptsCfp && normalize(row.accepts_cfp) !== s.acceptsCfp) return false;
+      if (s.acceptsCfp && acceptsFromDeadline(row.cfp_deadline) !== s.acceptsCfp) return false;
       if (toLower(s.cftOrCfw) === "yes") {
-        const cftYes = normalize(row.accepts_cft) === "Yes";
-        const cfwYes = normalize(row.accepts_cfw) === "Yes";
+        const cftYes = acceptsFromDeadline(row.cft_deadline) === "Yes";
+        const cfwYes = acceptsFromDeadline(row.cfw_deadline) === "Yes";
         if (!cftYes && !cfwYes) return false;
       } else {
-        if (s.acceptsCft && normalize(row.accepts_cft) !== s.acceptsCft) return false;
-        if (s.acceptsCfw && normalize(row.accepts_cfw) !== s.acceptsCfw) return false;
+        if (s.acceptsCft && acceptsFromDeadline(row.cft_deadline) !== s.acceptsCft) return false;
+        if (s.acceptsCfw && acceptsFromDeadline(row.cfw_deadline) !== s.acceptsCfw) return false;
       }
-      if (s.acceptsCfv && normalize(row.accepts_cfv) !== s.acceptsCfv) return false;
       if (s.academicLevel && normalize(row.academic_acceptance_level) !== s.academicLevel) return false;
       if (s.sponsorship && normalize(row.travel_accommodation_sponsorship) !== s.sponsorship) return false;
       if (s.conferenceType && normalize(row.conference_type) !== s.conferenceType) return false;
-      if (s.cfpMonth && normalize(row.cfp_deadline_month) !== s.cfpMonth) return false;
-      if (s.venuePattern && normalize(row.venue_pattern) !== s.venuePattern) return false;
       if (s.deadlineWindow) {
         const limit = Number(s.deadlineWindow);
         if (!Number.isNaN(limit)) {
           let days = null;
-          if (normalize(row.accepts_cfp) === "Yes") {
+          if (acceptsFromDeadline(row.cfp_deadline) === "Yes") {
             days = daysUntilDeadlineForRow(row, "cfp_deadline", { rollForwardIfPast: false });
           }
           if (days === null) {
-            const info = getNextDeadlineInfo(row);
+            const info = getNextDeadlineInfo(row, {
+              includePastFallback: true,
+              includeProjectedRecurring: true
+            });
             days = info ? info.daysUntil : null;
+            if (days === null) {
+              const ev = getEventTimingEstimate(row);
+              days = ev ? ev.daysUntil : null;
+            }
           }
           if (days === null || days < 0 || days > limit) return false;
         }
@@ -2905,15 +3372,12 @@
       state.filters.acceptsCfp = normalize(el.acceptsCfpFilter.value);
       state.filters.acceptsCft = normalize(el.acceptsCftFilter.value);
       state.filters.acceptsCfw = normalize(el.acceptsCfwFilter.value);
-      state.filters.acceptsCfv = normalize(el.acceptsCfvFilter?.value);
       state.filters.academicLevel = normalize(el.academicFilter.value);
       state.filters.sponsorship = normalize(el.sponsorshipFilter.value);
       state.filters.conferenceType = normalize(el.typeFilter.value);
-      state.filters.cfpMonth = normalize(el.monthFilter.value);
-      state.filters.venuePattern = normalize(el.venuePatternFilter.value);
       state.filters.favoritesOnly = normalize(el.favoritesFilter?.value);
       state.filters.sortBy = normalize(el.sortFilter.value) || "attendees_name";
-      if (state.filters.acceptsCft || state.filters.acceptsCfw || state.filters.acceptsCfv) {
+      if (state.filters.acceptsCft || state.filters.acceptsCfw) {
         state.filters.cftOrCfw = "";
       }
     }
@@ -3036,7 +3500,6 @@
         state.filters.cftOrCfw = "yes";
         state.filters.acceptsCft = "";
         state.filters.acceptsCfw = "";
-        state.filters.acceptsCfv = "";
         state.filters.actionableCfp = "";
       }
       if (preset === "travel_support") state.filters.sponsorship = "Yes";
@@ -3053,12 +3516,11 @@
       const map = {
         acceptsCfp: "acceptsCfp",
         acceptsCft: "acceptsCft",
-        acceptsCfw: "acceptsCfw",
-        acceptsCfv: "acceptsCfv"
+        acceptsCfw: "acceptsCfw"
       };
       const stateKey = map[filterKey];
       if (!stateKey) return;
-      const cycle = ["", "Yes", "No", "Unknown"];
+      const cycle = ["", "Yes", "No"];
       const current = state.filters[stateKey] || "";
       const idx = cycle.indexOf(current);
       state.filters[stateKey] = cycle[(idx + 1) % cycle.length];
@@ -3109,11 +3571,9 @@
       "acceptsCfp",
       "acceptsCft",
       "acceptsCfw",
-      "acceptsCfv",
       "cftOrCfw",
       "academicLevel",
       "sponsorship",
-      "cfpMonth",
       "deadlineWindow",
       "actionableCfp",
       "industryTalks",
@@ -3124,7 +3584,7 @@
       SPEAKER_ONLY_FILTER_KEYS.forEach((k) => {
         state.filters[k] = "";
       });
-      if (state.filters.sortBy === "month_name" || state.filters.sortBy === "deadline_soon") {
+      if (state.filters.sortBy === "deadline_soon") {
         state.filters.sortBy = "attendees_name";
       }
       if (
@@ -3147,7 +3607,6 @@
         : [
             { v: "attendees_name", l: "500+ attendees, then name" },
             { v: "name_asc", l: "Name A–Z" },
-            { v: "month_name", l: "CfP month, then name" },
             { v: "deadline_soon", l: "Next deadline soonest" }
           ];
       return opts
@@ -3216,15 +3675,16 @@
 
     function populateFilterOptions(rows) {
       fillOptions(el.attendeesFilter, uniqueSortedValues(rows, "attendees_500_plus"));
-      fillOptions(el.acceptsCfpFilter, uniqueSortedValues(rows, "accepts_cfp"));
-      fillOptions(el.acceptsCftFilter, uniqueSortedValues(rows, "accepts_cft"));
-      fillOptions(el.acceptsCfwFilter, uniqueSortedValues(rows, "accepts_cfw"));
-      fillOptions(el.acceptsCfvFilter, uniqueSortedValues(rows, "accepts_cfv"));
+      fillOptions(el.acceptsCfpFilter, uniqueSortedValues(rows, "accepts_cfp"), "accepts_cfp");
+      fillOptions(el.acceptsCftFilter, uniqueSortedValues(rows, "accepts_cft"), "accepts_cft");
+      fillOptions(el.acceptsCfwFilter, uniqueSortedValues(rows, "accepts_cfw"), "accepts_cfw");
       fillOptions(el.academicFilter, uniqueSortedValues(rows, "academic_acceptance_level"));
-      fillOptions(el.sponsorshipFilter, uniqueSortedValues(rows, "travel_accommodation_sponsorship"));
+      fillOptions(
+        el.sponsorshipFilter,
+        uniqueSortedValues(rows, "travel_accommodation_sponsorship"),
+        "travel_accommodation_sponsorship"
+      );
       fillOptions(el.typeFilter, uniqueSortedValues(rows, "conference_type"));
-      fillOptions(el.monthFilter, uniqueSortedValues(rows, "cfp_deadline_month"));
-      fillOptions(el.venuePatternFilter, uniqueSortedValues(rows, "venue_pattern"));
     }
 
     async function loadCsvAndRender() {
@@ -3249,7 +3709,7 @@
 
     function resetFilters() {
       closeConferenceDetail();
-      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : defaultFilters();
+      state.filters = defaultFilters();
       state.headerSort = { key: "", direction: "asc" };
       localStorage.removeItem(STORAGE_KEY);
       applyFilterValuesToInputs();
@@ -3364,7 +3824,7 @@
 
     function bindEvents() {
       initInstantTips();
-      const rerenderOnInput = [el.searchInput, el.favoritesFilter, el.attendeesFilter, el.acceptsCfpFilter, el.acceptsCftFilter, el.acceptsCfwFilter, el.acceptsCfvFilter, el.academicFilter, el.sponsorshipFilter, el.typeFilter, el.monthFilter, el.venuePatternFilter, el.sortFilter];
+      const rerenderOnInput = [el.searchInput, el.favoritesFilter, el.attendeesFilter, el.acceptsCfpFilter, el.acceptsCftFilter, el.acceptsCfwFilter, el.academicFilter, el.sponsorshipFilter, el.typeFilter, el.sortFilter];
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("input", rerender));
       rerenderOnInput.filter(Boolean).forEach((inputEl) => inputEl.addEventListener("change", rerender));
       if (el.resetBtn) el.resetBtn.addEventListener("click", resetFilters);

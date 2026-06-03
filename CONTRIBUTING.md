@@ -22,13 +22,7 @@ This project accepts updates through pull requests (PRs).
 git checkout -b chore/update-conference-entry
 ```
 
-2. Edit `conferences.csv`:
-   - Keep the existing column order.
-   - Do not rename headers.
-   - Keep values normalized (`Yes|No|Unknown`, `High|Medium|Low`).
-   - Date formats:
-     - recurring deadlines: `MM-DD` or `TBD`
-     - event/check dates: `YYYY-MM-DD` or `TBD`
+2. Edit `conferences.csv` per [`docs/CATALOG.md`](docs/CATALOG.md) (schema) and [`.cursor/skills/update-conference-data/SKILL.md`](.cursor/skills/update-conference-data/SKILL.md) (research rules).
 
 3. Validate your changes:
    - Check for accidental extra commas or broken CSV rows.

@@ -197,20 +197,16 @@
           <select id="attendeesFilter" aria-label="500 plus attendees"><option value="">All</option></select>
         </div>
         <div class="field speaker-only">
-          <label for="acceptsCfpFilter">Accepts CfP</label>
-          <select id="acceptsCfpFilter" aria-label="Accepts call for papers"><option value="">All</option></select>
+          <label for="acceptsCfpFilter">CfP deadline</label>
+          <select id="acceptsCfpFilter" aria-label="Filter by published CfP deadline MM-DD"><option value="">All</option></select>
         </div>
         <div class="field speaker-only">
-          <label for="acceptsCftFilter">Accepts CfT</label>
-          <select id="acceptsCftFilter" aria-label="Accepts call for trainings"><option value="">All</option></select>
+          <label for="acceptsCftFilter">CfT deadline</label>
+          <select id="acceptsCftFilter" aria-label="Filter by published CfT deadline MM-DD"><option value="">All</option></select>
         </div>
         <div class="field speaker-only">
-          <label for="acceptsCfwFilter">Accepts CfW</label>
-          <select id="acceptsCfwFilter" aria-label="Accepts call for workshops"><option value="">All</option></select>
-        </div>
-        <div class="field speaker-only">
-          <label for="acceptsCfvFilter">Accepts CfV</label>
-          <select id="acceptsCfvFilter" aria-label="Accepts call for volunteers"><option value="">All</option></select>
+          <label for="acceptsCfwFilter">CfW deadline</label>
+          <select id="acceptsCfwFilter" aria-label="Filter by published CfW deadline MM-DD"><option value="">All</option></select>
         </div>
         <div class="field advanced-filter speaker-only">
           <label for="academicFilter">Academic level</label>
@@ -224,20 +220,11 @@
           <label for="typeFilter">Conference type</label>
           <select id="typeFilter" aria-label="In person, hybrid, or virtual"><option value="">All</option></select>
         </div>
-        <div class="field advanced-filter speaker-only">
-          <label for="monthFilter">CfP month</label>
-          <select id="monthFilter" aria-label="Call for papers deadline month"><option value="">All</option></select>
-        </div>
-        <div class="field advanced-filter">
-          <label for="venuePatternFilter">Venue pattern</label>
-          <select id="venuePatternFilter" aria-label="Rotating or fixed venue"><option value="">All</option></select>
-        </div>
         <div class="field advanced-filter">
           <label for="sortFilter">Sort rows</label>
           <select id="sortFilter" aria-label="Sort table rows">
             <option value="attendees_name">500+ attendees, then name</option>
             <option value="name_asc">Name A–Z</option>
-            <option value="month_name">CfP month, then name</option>
             <option value="deadline_soon">Next deadline soonest</option>
           </select>
         </div>
@@ -279,28 +266,19 @@
             <caption class="hidden">Filtered conference opportunities and submission information</caption>
             <thead>
               <tr>
-                <th data-sort-key="conference_name" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by name">Name</button></th>
+                <th data-sort-key="conference_name" class="clickable-th name-col" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by name">Name</button></th>
                 <th scope="col" class="fav-col"><span class="visually-hidden">Favorite</span>★</th>
                 <th data-sort-key="attendees_500_plus" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by 500 plus attendees">500+?</button></th>
-                <th data-filter-key="acceptsCfp" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for papers">CfP?</button></th>
-                <th data-filter-key="acceptsCft" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for trainings">CfT?</button></th>
-                <th data-filter-key="acceptsCfw" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for workshops">CfW?</button></th>
-                <th data-filter-key="acceptsCfv" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for volunteers">CfV?</button></th>
                 <th data-sort-key="academic_acceptance_level" class="clickable-th acceptance-col-th speaker-only-col" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by academic level">Acad</button></th>
-                <th class="speaker-only-col">Tracks</th>
                 <th class="speaker-only-col">Sponsor</th>
-                <th class="speaker-only-col">CfP</th>
-                <th class="speaker-only-col">CfT</th>
-                <th class="speaker-only-col">CfW</th>
-                <th class="speaker-only-col">CfV</th>
+                <th data-filter-key="acceptsCfp" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for papers by deadline">CfP</button></th>
+                <th data-filter-key="acceptsCft" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for trainings by deadline">CfT</button></th>
+                <th data-filter-key="acceptsCfw" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for workshops by deadline">CfW</button></th>
                 <th data-sort-key="conference_start_date" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference start date">Start</button></th>
                 <th data-sort-key="conference_end_date" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference end date">End</button></th>
                 <th data-sort-key="city" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by city">City</button></th>
-                <th data-sort-key="country" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by country">Flag</button></th>
-                <th>Site</th>
-                <th class="speaker-only-col">T Link</th>
-                <th class="speaker-only-col">W Link</th>
-                <th class="speaker-only-col">V Link</th>
+                <th data-sort-key="country" class="clickable-th country-col-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by country"><span class="visually-hidden">Country</span></button></th>
+                <th class="attendee-only-col">Site</th>
                 <th class="speaker-only-col">Next Due</th>
                 <th scope="col" class="actions-col" aria-label="Actions"></th>
               </tr>

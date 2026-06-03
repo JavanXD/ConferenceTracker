@@ -1,0 +1,82 @@
+# Discovery tooling lives in discovery/ (gitignored until you choose to commit it).
+# Clone or copy discovery/ locally, add OPENAI_API_KEY secret, then enable this workflow.
+
+name: Conference discovery (weekly)
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_pages:
+        description: Max explore pages per preset (empty = all)
+        type: string
+        required: false
+      skip_research:
+        description: Skip OpenAI web research
+        type: boolean
+        default: false
+
+# Uncomment when discovery/ is committed:
+# on:
+#   schedule:
+#     - cron: "0 6 * * 1"
+#   workflow_dispatch: …
+
+jobs:
+  discover-and-research:
+    if: false  # enable after discovery/ is in the repo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require discovery directory
+        run: test -f discovery/04_orchestrate/step_10_sync.py
+
+      - name: Require OPENAI_API_KEY
+        if: github.event.inputs.skip_research != 'true'
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "::error::Set OPENAI_API_KEY and commit discovery/ folder first."
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m venv discovery/02_collect/.venv
+          discovery/02_collect/.venv/bin/pip install -r discovery/02_collect/requirements.txt
+          discovery/02_collect/.venv/bin/python -m cloakbrowser install
+
+      - name: Discovery, queue, and web research
+        env:
+          GITHUB_ACTIONS: true
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PIPELINE_LLM_MODEL: ${{ vars.PIPELINE_LLM_MODEL }}
+        run: |
+          EXTRA=""
+          if [ -n "${{ github.event.inputs.max_pages }}" ]; then
+            EXTRA="--max-pages ${{ github.event.inputs.max_pages }}"
+          fi
+          RESEARCH=""
+          if [ "${{ github.event.inputs.skip_research }}" != "true" ]; then
+            RESEARCH="--research --backend web"
+          fi
+          set +e
+          discovery/02_collect/.venv/bin/python discovery/04_orchestrate/step_10_sync.py --exit-code-on-queue $RESEARCH $EXTRA
+          code=$?
+          set -e
+          if [ "$code" -eq 2 ]; then exit 0; fi
+          exit "$code"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-${{ github.run_id }}
+          path: |
+            discovery/07_runtime/state/
+            discovery/07_runtime/proposals/
+            discovery/07_runtime/reports/
+            discovery/02_collect/output/
