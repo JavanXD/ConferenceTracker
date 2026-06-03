@@ -215,10 +215,10 @@ The UI includes **Backup & restore**: export or import a JSON file of everything
 Scraping and pipeline automation live in **`discovery/`** (excluded from git — see `discovery/README.md` after you create it locally). Produces proposal CSVs for review; does **not** change `conferences.csv` by default.
 
 ```bash
-discovery/extractors/.venv/bin/python discovery/pipeline/sync.py --research --backend web
+discovery/02_collect/.venv/bin/python discovery/04_orchestrate/step_10_sync.py --research --backend web
 ```
 
-Merge approved rows with the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md). Details: `discovery/pipeline/GITHUB_ACTIONS.md`, `discovery/pipeline/SECRETS.md`.
+Merge approved rows with the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md). Details: `discovery/00_STEP_ORDER.md`, `discovery/04_orchestrate/GITHUB_ACTIONS.md`.
 
 ## Verifying catalog data
 
@@ -226,4 +226,4 @@ Before changing `conferences.csv`:
 
 1. Research on **official** sources — use the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md) (required for non-trivial edits).
 2. Spot-check in the app (`python3 -m http.server 8000` → open `index.html`) and watch the browser console for CSV warnings.
-3. When merging from **discovery proposals** (local `discovery/` folder), run `discovery/pipeline/validate_proposal.py` on the proposal CSV first; see `discovery/pipeline/HUMAN_REVIEW.md`.
+3. When merging from **discovery proposals** (local `discovery/` folder), run `discovery/06_review/step_01_validate_proposal.py` first; see `discovery/06_review/00_HUMAN_REVIEW.md`.

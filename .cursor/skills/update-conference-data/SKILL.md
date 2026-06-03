@@ -36,7 +36,7 @@ Match naming to how the community knows the event (official branding). Prefer on
 - **Search the full catalog** before any **add** — exact name, similar name, and same official domain.
 - If a row already exists (even under slightly different spelling), **update that row** — do not add a second.
 - **Never** create two rows for the same conference edition.
-- When merging from [`discovery/pipeline/proposals/`](../../../discovery/pipeline/HUMAN_REVIEW.md): respect `proposed_action`, `matched_catalog_name`, and `risk_flags`; run `python discovery/pipeline/validate_proposal.py` on the proposal file first if the user is doing a batch merge.
+- When merging from `discovery/07_runtime/proposals/`: respect `proposed_action`, `matched_catalog_name`, and `risk_flags`; run `python discovery/06_review/step_01_validate_proposal.py` on the proposal file first if the user is doing a batch merge. See [`discovery/06_review/00_HUMAN_REVIEW.md`](../../../discovery/06_review/00_HUMAN_REVIEW.md).
 
 ## Research (required)
 
@@ -122,9 +122,9 @@ After editing, report:
 
 Conference **names and high-level hints** from the discovery stack:
 
-- **Discovery tooling** ([`discovery/README.md`](../../../discovery/README.md), gitignored) — collect + LLM extract + [`discovery/pipeline/`](../../../discovery/pipeline/HUMAN_REVIEW.md) proposals with `proposed_action`, `matched_catalog_name`, `risk_flags`.
+- **Discovery tooling** ([`discovery/README.md`](../../../discovery/README.md), [`00_STEP_ORDER.md`](../../../discovery/00_STEP_ORDER.md), gitignored) — numbered steps `02_collect` → `03_extract` → `04_orchestrate` → proposals in `07_runtime/`.
 
-The **pipeline never writes** `conferences.csv`. On GitHub Actions (when enabled), proposals may include **web research** JSON in `research_notes` (OpenAI + fetched pages). Use this skill when the **human** asks to merge **approved** rows. Run `python discovery/pipeline/validate_proposal.py` on the proposal file first when doing a batch merge. Verify on **official** sites; respect `proposed_action` and `risk_flags`.
+The **pipeline never writes** `conferences.csv`. On GitHub Actions (when enabled), proposals may include **web research** JSON in `research_notes`. Use this skill when the **human** asks to merge **approved** rows. Run `python discovery/06_review/step_01_validate_proposal.py` first for batch merges. Verify on **official** sites; respect `proposed_action` and `risk_flags`.
 
 ## Optional verification
 
