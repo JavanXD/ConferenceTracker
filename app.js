@@ -2341,8 +2341,12 @@
       const enc = encodeURIComponent(name);
       const display = escapeHtml(name);
       const extraTracks = !isAttendeeMode() ? renderExtraTrackBadges(row) : "";
-      const extras = extraTracks ? ` <span class="name-extra-tracks">${extraTracks}</span>` : "";
-      return `<span class="name-cell-wrap"><button type="button" class="name-detail-btn" data-action="open-detail" data-cname="${enc}" aria-label="Open details for ${escapeHtml(name)}" title="${display}"><span class="cell-ellipsis name-ellipsis">${display}</span></button>${extras}</span>`;
+      const extras = extraTracks ? `<div class="name-extra-tracks">${extraTracks}</div>` : "";
+      return `<div class="name-cell-wrap">
+        <div class="conf-card-head">
+          <button type="button" class="name-detail-btn" data-action="open-detail" data-cname="${enc}" aria-label="Open details for ${escapeHtml(name)}" title="${display}"><span class="cell-ellipsis name-ellipsis">${display}</span></button>
+          <div class="conf-card-fav">${renderFavoriteCell(row)}</div>
+        </div>${extras}</div>`;
     }
 
     function cfpDeadlineWithinDays(row, maxDays) {
@@ -2427,17 +2431,38 @@
       }
       el.emptyState.hidden = true;
 
+      const MOBILE_FIELD_LABELS = {
+        Academic: "Acad",
+        Sponsorship: "Sponsor",
+        "Next Deadline": "Next Due"
+      };
+
       function td(label, value, className) {
-        const cls = className ? ` class="${escapeHtml(className)}"` : "";
-        return `<td data-label="${escapeHtml(label)}"${cls}>${value}</td>`;
+        const parts = (className || "").split(/\s+/).filter(Boolean);
+        if (label === "Name") parts.push("m-head");
+        else if (label === "Favorite") parts.push("m-fav");
+        else if (label === "Actions") parts.push("m-actions");
+        else if (label === "Next Deadline" || label === "Site") parts.push("m-foot");
+        else parts.push("m-field");
+        const isDeadlineCol = label === "CfP" || label === "CfT" || label === "CfW";
+        const empty = !String(value == null ? "" : value).trim();
+        if (isDeadlineCol && empty) parts.push("deadline-cell-empty");
+        const cls = parts.length ? ` class="${escapeHtml(parts.join(" "))}"` : "";
+        const content = value == null ? "" : value;
+        const displayLabel = MOBILE_FIELD_LABELS[label] || label;
+        const inner =
+          parts.includes("m-field") || parts.includes("m-foot")
+            ? `<span class="m-field-value">${content}</span>`
+            : content;
+        return `<td data-label="${escapeHtml(displayLabel)}"${cls}>${inner}</td>`;
       }
 
       const attendee = isAttendeeMode();
       el.dataTbody.innerHTML = rows
         .map((r) => {
           const cells = [
-            td("Name", renderNameCell(r), "name-col"),
-            td("Favorite", renderFavoriteCell(r), "fav-col"),
+            td("Name", renderNameCell(r), "name-col m-head"),
+            td("Favorite", renderFavoriteCell(r), "fav-col fav-col-desktop"),
             td("500+?", escapeHtml(normalize(r.attendees_500_plus)))
           ];
           if (!attendee) {
@@ -2461,7 +2486,7 @@
             cells.push(td("Next Deadline", renderNextDeadline(r)));
           }
           cells.push(td("Actions", renderRowActions(r), "table-action-cell"));
-          return `<tr>${cells.join("")}</tr>`;
+          return `<tr class="conf-row">${cells.join("")}</tr>`;
         })
         .join("");
     }
@@ -2813,7 +2838,7 @@
     function renderDeadlinePortalMarkup(url, linkKind) {
       const { glyph, platform } = submissionPortalIndicator(url);
       const title = `${platform} — ${linkKind} open, deadline not published`;
-      return `<span class="deadline-portal" title="${escapeAttr(title)}" aria-hidden="true">${glyph}</span>`;
+      return `<span class="deadline-chip" title="${escapeAttr(title)}"><span class="deadline-portal" aria-hidden="true">${glyph}</span><span class="deadline-portal-label">${escapeHtml(platform)}</span></span>`;
     }
 
     function wrapDeadlineLink(url, innerHtml, ariaLabel) {
