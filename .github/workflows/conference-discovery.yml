@@ -1,7 +1,7 @@
 # Discovery tooling lives in discovery/ (gitignored until you choose to commit it).
-# Clone or copy discovery/ locally, add OPENAI_API_KEY secret, then enable this workflow.
+# Clone or copy discovery/ locally, add OPENAI_API_KEY secret, then push discovery/ to enable.
 
-name: Conference discovery (weekly)
+name: Conference discovery
 
 on:
   workflow_dispatch:
@@ -14,40 +14,51 @@ on:
         description: Skip OpenAI web research
         type: boolean
         default: false
+  push:
+    branches: [main]
+    paths:
+      - "discovery/**"
+      - ".github/workflows/conference-discovery.yml"
+  # Optional schedule — prefer monthly/biweekly over weekly to save minutes:
+  # schedule:
+  #   - cron: "0 6 1 * *"   # 06:00 UTC on the 1st of each month
 
-# Uncomment when discovery/ is committed:
-# on:
-#   schedule:
-#     - cron: "0 6 * * 1"
-#   workflow_dispatch: …
+concurrency:
+  group: discovery-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   discover-and-research:
-    if: false  # enable after discovery/ is in the repo
+    # Auto-skips until discovery/ is committed (replaces hard-coded if: false).
+    if: hashFiles('discovery/04_orchestrate/step_10_sync.py') != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
-      - name: Require discovery directory
-        run: test -f discovery/04_orchestrate/step_10_sync.py
-
-      - name: Require OPENAI_API_KEY
-        if: github.event.inputs.skip_research != 'true'
-        run: |
-          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
-            echo "::error::Set OPENAI_API_KEY and commit discovery/ folder first."
-            exit 1
-          fi
-
       - uses: actions/setup-python@v5
+        id: python
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: discovery/02_collect/requirements.txt
 
       - name: Install dependencies
         run: |
           python -m venv discovery/02_collect/.venv
           discovery/02_collect/.venv/bin/pip install -r discovery/02_collect/requirements.txt
           discovery/02_collect/.venv/bin/python -m cloakbrowser install
+
+      - name: Require OPENAI_API_KEY
+        if: github.event.inputs.skip_research != 'true'
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "::error::Set OPENAI_API_KEY repository secret before running web research."
+            exit 1
+          fi
 
       - name: Discovery, queue, and web research
         env:
