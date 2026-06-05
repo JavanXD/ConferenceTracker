@@ -1,20 +1,20 @@
 ---
 name: update-conference-data
 description: >-
-  Add or update rows in conferences.csv for the Conference Tracker dashboard.
+  Add or update rows in data/conferences.csv for the Conference Tracker dashboard.
   Use when the user asks to add a conference, update deadlines/links/location,
   fix missing data, verify CFP/CfT/CfW, enrich notes, or edit conference catalog
   entries. Schema: docs/CATALOG.md. Requires web research from official sources before writing values.
 ---
 
-# Update conference data (`conferences.csv`)
+# Update conference data (`data/conferences.csv`)
 
 **Schema, enums, UI mapping:** [`docs/CATALOG.md`](../../../docs/CATALOG.md) — do not duplicate column lists here.  
 **PR workflow:** [CONTRIBUTING.md](../../../CONTRIBUTING.md).
 
 ## Scope
 
-- **In scope:** `conferences.csv` only.
+- **In scope:** `data/conferences.csv` only.
 - **Out of scope:** `index.html` / `app.js` unless the user asks for UI changes.
 
 ## Before editing

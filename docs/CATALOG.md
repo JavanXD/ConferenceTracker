@@ -1,6 +1,6 @@
-# Conference catalog (`conferences.csv`)
+# Conference catalog (`data/conferences.csv`)
 
-Canonical reference for the static catalog at the repo root. The dashboard loads it with Papa Parse; invalid values may coerce to `TBD`/`Unknown` (`normalizeAndValidateRows` in `app.js`).
+Canonical reference for the static catalog in `data/`. The dashboard loads it with Papa Parse; invalid values may coerce to `TBD`/`Unknown` (`normalizeAndValidateRows` in `app.js`).
 
 **How to edit rows:** [`.cursor/skills/update-conference-data/SKILL.md`](../.cursor/skills/update-conference-data/SKILL.md) (research workflow). **PRs:** [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 

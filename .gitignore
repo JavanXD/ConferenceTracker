@@ -3,7 +3,7 @@
 *.pem
 .DS_Store
 conferences copy.csv
-conferences.csv.bak*
+data/conferences.csv.bak*
 
 TODO.md
 

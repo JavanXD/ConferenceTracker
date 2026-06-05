@@ -1,10 +1,10 @@
 # Cybersecurity Conference Tracker
 
-Track cybersecurity, infosec, and hacking speaking opportunities in `conferences.csv`, and view them in the static dashboard (`index.html`).
+Track cybersecurity, infosec, and hacking speaking opportunities in `data/conferences.csv`, and view them in the static dashboard (`index.html`).
 
 ## Screenshot
 
-![Conference Tracker dashboard screenshot](screenshots/app-screenshot.png)
+![Conference Tracker dashboard screenshot](assets/screenshots/app-screenshot.png)
 
 ## Why This Project Exists
 
@@ -22,7 +22,7 @@ In short, this repository turns conference discovery from an ad-hoc process into
 
 ## No backend required
 
-This project is a **static site** (HTML, CSS, JavaScript, and `conferences.csv`). There is **no** server-side app, database, or account system to deploy. Personal UI state (filters, persona mode, pipeline, saved trips) stays in **your browser** using `localStorage` and does not get sent to a server.
+This project is a **static site** (HTML, CSS, JavaScript, and `data/conferences.csv`). There is **no** server-side app, database, or account system to deploy. Personal UI state (filters, persona mode, pipeline, saved trips) stays in **your browser** using `localStorage` and does not get sent to a server.
 
 You can use the **public deployment**, **self-host** a copy, or **run locally**—see [How to run (no backend)](#how-to-run-no-backend) below. Optional future features (accounts, verified badges, sync) would be additive; the core tracker is intended to remain usable as static files only.
 
@@ -31,6 +31,7 @@ You can use the **public deployment**, **self-host** a copy, or **run locally**�
 | Audience | Doc |
 |----------|-----|
 | **Catalog schema & UI** | [`docs/CATALOG.md`](docs/CATALOG.md) — columns, enums, deadlines, dashboard mapping |
+| **Repo layout** | [`docs/REPO_LAYOUT.md`](docs/REPO_LAYOUT.md) — folders and conventions |
 | **Curators / AI agents** | [`.cursor/skills/update-conference-data/SKILL.md`](.cursor/skills/update-conference-data/SKILL.md) — research workflow (points at CATALOG) |
 | **Pull requests** | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
@@ -56,7 +57,7 @@ Serve the **repository root** as static files. No runtime, build step, or databa
 
 Examples:
 
-- **GitHub Pages:** Enable Pages on your fork; publish the branch/folder that contains `index.html` (often the repo root). Relative paths (`./app.js`, `./conferences.csv`) work as long as the site entry URL matches your folder layout.
+- **GitHub Pages:** Enable Pages on your fork; publish the branch/folder that contains `index.html` (often the repo root). Relative paths (`./app.js`, `./data/conferences.csv`) work as long as the site entry URL matches your folder layout.
 - **Any static host or web server:** Copy the project files and point the document root at this directory.
 - **Object storage + CDN:** Upload the same files; keep relative paths intact.
 
@@ -64,7 +65,7 @@ Forkers get their own URL (e.g. `https://<user>.github.io/<repo>/`); the app wor
 
 ### 3. Run locally
 
-Browsers block loading `conferences.csv` from `file://` pages, so use a small local HTTP server. From the project root:
+Browsers block loading `data/conferences.csv` from `file://` pages, so use a small local HTTP server. From the project root:
 
 ```bash
 python3 -m http.server 8000

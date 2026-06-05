@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-CSV_PATH = REPO / "conferences.csv"
+CSV_PATH = REPO / "data" / "conferences.csv"
 CATALOG_PATH = REPO / "docs" / "CATALOG.md"
 
 MM_DD = re.compile(r"^(TBD|\d{2}-\d{2})$")

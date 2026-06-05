@@ -1,4 +1,4 @@
-    const CSV_PATH = "conferences.csv";
+    const CSV_PATH = "data/conferences.csv";
     const STORAGE_KEY = "conference_dashboard_filters_v1";
     const GEO_CACHE_KEY = "conference_dashboard_geo_cache_v3";
     const UI_PREFS_KEY = "conference_dashboard_ui_prefs_v1";
