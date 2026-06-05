@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy (GDPR) | Conference Tracker</title>
+  <meta name="description" content="Privacy policy and GDPR information for Conference Tracker — local browser storage, third-party map tiles, no accounts or tracking." />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://conference-tracker.javan.de/privacy.html" />
+  <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+  <script>
+    (function () {
+      try {
+        var theme = "light";
+        var raw = localStorage.getItem("conference_dashboard_ui_prefs_v1");
+        if (raw) {
+          var prefs = JSON.parse(raw);
+          if (prefs.theme === "dark" || prefs.theme === "light") theme = prefs.theme;
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="legal-page-body">
+  <main class="legal-page" id="appMain">
+    <p class="legal-back"><a href="./index.html">← Conference Tracker</a></p>
+    <h1>Privacy Policy</h1>
+    <p class="legal-lead">Datenschutzerklärung · GDPR / DSGVO</p>
+    <p class="legal-updated">Last updated: 5 June 2026</p>
+
+    <section class="legal-card card">
+      <h2>1. Controller</h2>
+      <p>
+        Security &amp; Software Engineering Javan Rasokat<br />
+        Dorfäckerweg 3, 75242 Neuhausen, Germany<br />
+        Email:
+        <a class="obf-email" href="#" data-c="99,111,110,116,97,99,116,64,106,97,118,97,110,46,100,101" rel="nofollow">…</a>
+        <noscript>(see <a href="https://about.javan.de">about.javan.de</a>)</noscript><br />
+        Website: <a href="https://about.javan.de" rel="noopener noreferrer">about.javan.de</a>
+      </p>
+      <p>Provider details: <a href="./impressum.html">Impressum</a></p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>2. Overview</h2>
+      <p>
+        Conference Tracker (<a href="https://conference-tracker.javan.de/">conference-tracker.javan.de</a>)
+        is a <strong>static website</strong>. There are no user accounts and no server-side database of
+        your activity. The app runs entirely in your browser; personal planning data stays on your device
+        unless you export it yourself.
+      </p>
+      <ul>
+        <li>No analytics or advertising trackers</li>
+        <li>No marketing cookies</li>
+        <li>No sale of personal data</li>
+      </ul>
+    </section>
+
+    <section class="legal-card card">
+      <h2>3. Data stored in your browser (localStorage)</h2>
+      <p>
+        To remember your filters, favorites, private notes, speaker pipeline, saved trips, theme, and
+        similar UI preferences, the app stores data in your browser’s <code>localStorage</code>.
+        This data is <strong>not transmitted</strong> to our servers.
+      </p>
+      <p><strong>Legal basis (GDPR Art. 6(1)(f)):</strong> legitimate interest in providing a functional, personalised experience without accounts.</p>
+      <p>
+        You can delete this data anytime via your browser’s site-data settings or the in-app
+        <strong>Backup &amp; restore</strong> export/import flow.
+      </p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>4. Geocode cache</h2>
+      <p>
+        For the world map, city/country pairs may be sent to
+        <a href="https://open-meteo.com/en/docs/geocoding-api" rel="noopener noreferrer">Open-Meteo Geocoding API</a>
+        to resolve coordinates. Results are cached in your browser to reduce repeat requests.
+        Open-Meteo’s privacy practices apply to those requests.
+      </p>
+      <p><strong>Legal basis:</strong> Art. 6(1)(f) — legitimate interest in displaying map markers.</p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>5. Third-party resources loaded by the page</h2>
+      <p>When you use the app, your browser may contact:</p>
+      <ul>
+        <li><strong>cdnjs.cloudflare.com</strong> — JavaScript and CSS libraries (PapaParse, Leaflet)</li>
+        <li><strong>tile.openstreetmap.org</strong> — map tiles (OpenStreetMap)</li>
+        <li><strong>geocoding-api.open-meteo.com</strong> — geocoding (see above)</li>
+      </ul>
+      <p>
+        These providers may process technical data such as your IP address and request metadata in their
+        server logs. Refer to their respective privacy policies.
+      </p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>6. External links (sponsors &amp; conferences)</h2>
+      <p>
+        Footer support links (Ko-fi, Buy Me a Coffee, GitHub Sponsors) and conference URLs in the catalog
+        lead to third-party websites with their own privacy practices. No personal data is passed from
+        Conference Tracker when you click those links.
+      </p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>7. Hosting</h2>
+      <p>
+        The site is served as static files (e.g. via GitHub Pages). The host may process server logs
+        (IP address, timestamp, requested URL) for security and operations.
+      </p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>8. Your rights (GDPR)</h2>
+      <p>If GDPR applies, you have the right to:</p>
+      <ul>
+        <li>Access, rectification, erasure, and restriction of processing</li>
+        <li>Data portability (where applicable)</li>
+        <li>Object to processing based on legitimate interests</li>
+        <li>Lodge a complaint with a supervisory authority</li>
+      </ul>
+      <p>
+        Because most data stays in your browser, you can often exercise erasure directly by clearing site
+        data. For any request, contact
+        <a class="obf-email" href="#" data-c="99,111,110,116,97,99,116,64,106,97,118,97,110,46,100,101" rel="nofollow">…</a>.
+      </p>
+      <p>
+        Supervisory authority (Germany, Baden-Württemberg):
+        <a href="https://www.baden-wuerttemberg.datenschutz.de/" rel="noopener noreferrer">LfDI Baden-Württemberg</a>.
+      </p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>9. Children</h2>
+      <p>This service is not directed at children under 16 and does not knowingly collect their data.</p>
+    </section>
+
+    <section class="legal-card card">
+      <h2>10. Changes</h2>
+      <p>
+        This policy may be updated when the app or legal requirements change. The date at the top
+        indicates the latest revision.
+      </p>
+    </section>
+
+    <p class="legal-meta">Legal notice: <a href="./impressum.html">Impressum</a></p>
+  </main>
+
+  <footer class="site-footer site-footer-compact">
+    <div class="footer-inner">
+      <p class="footer-legal-line">
+        <a href="./impressum.html">Impressum</a>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        <a href="./privacy.html">Privacy policy</a>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        <a href="./index.html">Back to app</a>
+      </p>
+      <p class="footer-copy">© 2026 Conference Tracker</p>
+    </div>
+  </footer>
+  <script src="./assets/obfuscate-email.js" defer></script>
+</body>
+</html>

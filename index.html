@@ -280,7 +280,6 @@
                 <th data-sort-key="conference_duration_days" class="clickable-th duration-col-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference duration in days">Days</button></th>
                 <th data-sort-key="city" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by city">City</button></th>
                 <th data-sort-key="country" class="clickable-th country-col-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by country"><span class="visually-hidden">Country</span></button></th>
-                <th class="attendee-only-col">Site</th>
                 <th class="speaker-only-col">Next Due</th>
                 <th scope="col" class="actions-col" aria-label="Actions"></th>
               </tr>
@@ -379,29 +378,81 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <p class="footer-links">
-        <a
-          href="https://ko-fi.com/javanxd"
-          class="footer-support-link footer-kofi-link"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.47 2.22 6.43 5.31 7.37.14.04.28.07.43.07.27 0 .53-.1.74-.29L13 16.3V19h-2v3h8v-3h-2v-2.7l2.52-2.52c.21-.19.33-.46.33-.74 0-.15-.03-.29-.07-.43C20.28 12.22 20.5 9.5 20.5 6V5c0-1.1-.9-2-2-2zm-1 3v1.5c0 2.48-1.02 4.5-2.5 4.5S12.5 10.48 12.5 8V6h5zM4 5h1v3.5c0 2.9 1.92 5.34 4.57 6.06V19H4v2h2v-5.06C3.92 14.84 2 11.4 2 8.5V7c0-1.1.9-2 2-2z"/></svg>
-          <span>Ko-fi</span>
-        </a>
-        <a
-          href="https://buymeacoffee.com/javanxd"
-          class="footer-support-link footer-bmc-link"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.47 2.22 6.43 5.31 7.37.14.04.28.07.43.07.27 0 .53-.1.74-.29L13 16.3V19h-2v3h8v-3h-2v-2.7l2.52-2.52c.21-.19.33-.46.33-.74 0-.15-.03-.29-.07-.43C20.28 12.22 20.5 9.5 20.5 6V5c0-1.1-.9-2-2-2zm-1 3v1.5c0 2.48-1.02 4.5-2.5 4.5S12.5 10.48 12.5 8V6h5zM4 5h1v3.5c0 2.9 1.92 5.34 4.57 6.06V19H4v2h2v-5.06C3.92 14.84 2 11.4 2 8.5V7c0-1.1.9-2 2-2z"/></svg>
-          <span>Buy me a coffee</span>
-        </a>
-        <span class="footer-sep" aria-hidden="true">·</span>
-        <button type="button" class="footer-link-btn" id="footerShortcutsBtn" aria-label="Open keyboard shortcuts">?<span class="visually-hidden"> Keyboard shortcuts</span></button>
-      </p>
-      <p id="footerStatus" class="footer-status" role="status" aria-live="polite"></p>
+      <div class="footer-grid">
+        <section class="footer-col footer-brand" aria-labelledby="footerBrandHeading">
+          <h2 class="footer-heading" id="footerBrandHeading">Conference Tracker</h2>
+          <p class="footer-tagline">Find infosec conferences and track CfP, CfT, and CfW deadlines — with filters, a world map, and a speaker pipeline.</p>
+          <p class="footer-operator">
+            Free &amp; open source · No sign-up · Your data stays on this device
+          </p>
+        </section>
+
+        <nav class="footer-col" aria-labelledby="footerProjectHeading">
+          <h2 class="footer-heading" id="footerProjectHeading">Get involved</h2>
+          <ul class="footer-list">
+            <li><a href="https://github.com/JavanXD/ConferenceTracker" rel="noopener noreferrer" target="_blank">View on GitHub</a></li>
+            <li><a href="https://github.com/JavanXD/ConferenceTracker/blob/main/CONTRIBUTING.md" rel="noopener noreferrer" target="_blank">Add or update a conference</a></li>
+            <li>
+              <button type="button" class="footer-inline-btn" id="footerShortcutsBtn" aria-keyshortcuts="?">Shortcut keys (?)</button>
+            </li>
+          </ul>
+        </nav>
+
+        <nav class="footer-col" aria-labelledby="footerLegalHeading">
+          <h2 class="footer-heading" id="footerLegalHeading">Legal</h2>
+          <ul class="footer-list">
+            <li><a href="./impressum.html">Impressum</a></li>
+            <li><a href="./privacy.html">Privacy policy</a></li>
+            <li><span class="footer-note">Conference data: <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener noreferrer" target="_blank">CC BY 4.0</a></span></li>
+          </ul>
+        </nav>
+
+        <section class="footer-col footer-support-col" aria-labelledby="footerSupportHeading">
+          <h2 class="footer-heading" id="footerSupportHeading">Support the project</h2>
+          <p class="footer-support-lead">Optional tips help keep deadlines accurate and hosting online.</p>
+          <div class="footer-support-actions">
+            <a
+              href="https://ko-fi.com/javanxd"
+              class="footer-support-link footer-kofi-link"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.47 2.22 6.43 5.31 7.37.14.04.28.07.43.07.27 0 .53-.1.74-.29L13 16.3V19h-2v3h8v-3h-2v-2.7l2.52-2.52c.21-.19.33-.46.33-.74 0-.15-.03-.29-.07-.43C20.28 12.22 20.5 9.5 20.5 6V5c0-1.1-.9-2-2-2zm-1 3v1.5c0 2.48-1.02 4.5-2.5 4.5S12.5 10.48 12.5 8V6h5zM4 5h1v3.5c0 2.9 1.92 5.34 4.57 6.06V19H4v2h2v-5.06C3.92 14.84 2 11.4 2 8.5V7c0-1.1.9-2 2-2z"/></svg>
+              <span>Ko-fi</span>
+            </a>
+            <a
+              href="https://buymeacoffee.com/javanxd"
+              class="footer-support-link footer-bmc-link"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.47 2.22 6.43 5.31 7.37.14.04.28.07.43.07.27 0 .53-.1.74-.29L13 16.3V19h-2v3h8v-3h-2v-2.7l2.52-2.52c.21-.19.33-.46.33-.74 0-.15-.03-.29-.07-.43C20.28 12.22 20.5 9.5 20.5 6V5c0-1.1-.9-2-2-2zm-1 3v1.5c0 2.48-1.02 4.5-2.5 4.5S12.5 10.48 12.5 8V6h5zM4 5h1v3.5c0 2.9 1.92 5.34 4.57 6.06V19H4v2h2v-5.06C3.92 14.84 2 11.4 2 8.5V7c0-1.1.9-2 2-2z"/></svg>
+              <span>Buy me a coffee</span>
+            </a>
+            <a
+              href="https://github.com/sponsors/JavanXD"
+              class="footer-support-link footer-sponsor-link"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              <span>GitHub Sponsors</span>
+            </a>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="footer-copy">
+          © 2026 Conference Tracker ·
+          <a href="./impressum.html">Impressum</a>
+          <span class="footer-sep" aria-hidden="true">·</span>
+          <a href="./privacy.html">Privacy policy</a>
+          <span class="footer-sep" aria-hidden="true">·</span>
+          <span>No analytics or ad tracking</span>
+        </p>
+        <p id="footerStatus" class="footer-status" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </footer>
 

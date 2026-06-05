@@ -83,12 +83,12 @@
         actionableCfp: "",
         industryTalks: "",
         inPipeline: "",
-        sortBy: "attendees_name"
+        sortBy: "deadline_soon"
       };
     }
 
-    function defaultSortByForPersona(mode = state.personaMode) {
-      return mode === "attendee" ? "start_soon" : "deadline_soon";
+    function defaultSortByForPersona() {
+      return "deadline_soon";
     }
 
     function speakerPresetFilters() {
@@ -103,7 +103,7 @@
     function attendeePresetFilters() {
       return {
         ...defaultFilters(),
-        sortBy: "start_soon"
+        sortBy: "deadline_soon"
       };
     }
 
@@ -2270,71 +2270,112 @@
       return escapeHtml(raw || "—");
     }
 
-    const COUNTRY_REGION = {
-      europe: new Set([
-        "United Kingdom",
-        "Germany",
-        "France",
-        "Netherlands",
-        "Belgium",
-        "Switzerland",
-        "Austria",
-        "Italy",
-        "Spain",
-        "Portugal",
-        "Norway",
-        "Denmark",
-        "Poland",
-        "Romania",
-        "Luxembourg",
-        "Lithuania",
-        "Greece"
-      ]),
-      americas: new Set(["United States", "Canada", "Brazil", "Argentina", "Mexico", "Chile"]),
-      apac: new Set(["Japan", "Singapore", "India", "Australia", "Indonesia", "Nepal", "Taiwan"]),
-      mea: new Set(["Israel", "United Arab Emirates", "Saudi Arabia", "Bahrain", "Qatar"]),
-      africa: new Set(["South Africa", "Kenya"])
+    const COUNTRY_REGISTRY = {
+      Albania: { iso2: "AL", region: "europe" },
+      Argentina: { iso2: "AR", region: "americas" },
+      Armenia: { iso2: "AM", region: "europe" },
+      Australia: { iso2: "AU", region: "apac" },
+      Austria: { iso2: "AT", region: "europe" },
+      Azerbaijan: { iso2: "AZ", region: "europe" },
+      Bahrain: { iso2: "BH", region: "mea" },
+      Bangladesh: { iso2: "BD", region: "apac" },
+      Belarus: { iso2: "BY", region: "europe" },
+      Belgium: { iso2: "BE", region: "europe" },
+      "Bosnia and Herzegovina": { iso2: "BA", region: "europe" },
+      Brazil: { iso2: "BR", region: "americas" },
+      Bulgaria: { iso2: "BG", region: "europe" },
+      Canada: { iso2: "CA", region: "americas" },
+      Chile: { iso2: "CL", region: "americas" },
+      China: { iso2: "CN", region: "apac" },
+      Colombia: { iso2: "CO", region: "americas" },
+      "Costa Rica": { iso2: "CR", region: "americas" },
+      Croatia: { iso2: "HR", region: "europe" },
+      Cyprus: { iso2: "CY", region: "europe" },
+      "Czech Republic": { iso2: "CZ", region: "europe" },
+      Denmark: { iso2: "DK", region: "europe" },
+      Ecuador: { iso2: "EC", region: "americas" },
+      Egypt: { iso2: "EG", region: "mea" },
+      Estonia: { iso2: "EE", region: "europe" },
+      Ethiopia: { iso2: "ET", region: "africa" },
+      Finland: { iso2: "FI", region: "europe" },
+      France: { iso2: "FR", region: "europe" },
+      Georgia: { iso2: "GE", region: "europe" },
+      Germany: { iso2: "DE", region: "europe" },
+      Ghana: { iso2: "GH", region: "africa" },
+      Greece: { iso2: "GR", region: "europe" },
+      "Hong Kong": { iso2: "HK", region: "apac" },
+      Hungary: { iso2: "HU", region: "europe" },
+      Iceland: { iso2: "IS", region: "europe" },
+      India: { iso2: "IN", region: "apac" },
+      Indonesia: { iso2: "ID", region: "apac" },
+      Ireland: { iso2: "IE", region: "europe" },
+      Israel: { iso2: "IL", region: "mea" },
+      Italy: { iso2: "IT", region: "europe" },
+      Japan: { iso2: "JP", region: "apac" },
+      Jordan: { iso2: "JO", region: "mea" },
+      Kenya: { iso2: "KE", region: "africa" },
+      Kuwait: { iso2: "KW", region: "mea" },
+      Latvia: { iso2: "LV", region: "europe" },
+      Lebanon: { iso2: "LB", region: "mea" },
+      Lithuania: { iso2: "LT", region: "europe" },
+      Luxembourg: { iso2: "LU", region: "europe" },
+      Malaysia: { iso2: "MY", region: "apac" },
+      Malta: { iso2: "MT", region: "europe" },
+      Mexico: { iso2: "MX", region: "americas" },
+      Moldova: { iso2: "MD", region: "europe" },
+      Montenegro: { iso2: "ME", region: "europe" },
+      Morocco: { iso2: "MA", region: "mea" },
+      Nepal: { iso2: "NP", region: "apac" },
+      "New Zealand": { iso2: "NZ", region: "apac" },
+      Netherlands: { iso2: "NL", region: "europe" },
+      Nigeria: { iso2: "NG", region: "africa" },
+      "North Macedonia": { iso2: "MK", region: "europe" },
+      Norway: { iso2: "NO", region: "europe" },
+      Oman: { iso2: "OM", region: "mea" },
+      Pakistan: { iso2: "PK", region: "apac" },
+      Panama: { iso2: "PA", region: "americas" },
+      Peru: { iso2: "PE", region: "americas" },
+      Philippines: { iso2: "PH", region: "apac" },
+      Poland: { iso2: "PL", region: "europe" },
+      Portugal: { iso2: "PT", region: "europe" },
+      Qatar: { iso2: "QA", region: "mea" },
+      Romania: { iso2: "RO", region: "europe" },
+      Russia: { iso2: "RU", region: "europe" },
+      "Saudi Arabia": { iso2: "SA", region: "mea" },
+      Serbia: { iso2: "RS", region: "europe" },
+      Singapore: { iso2: "SG", region: "apac" },
+      Slovakia: { iso2: "SK", region: "europe" },
+      Slovenia: { iso2: "SI", region: "europe" },
+      "South Africa": { iso2: "ZA", region: "africa" },
+      "South Korea": { iso2: "KR", region: "apac" },
+      Spain: { iso2: "ES", region: "europe" },
+      "Sri Lanka": { iso2: "LK", region: "apac" },
+      Sweden: { iso2: "SE", region: "europe" },
+      Switzerland: { iso2: "CH", region: "europe" },
+      Taiwan: { iso2: "TW", region: "apac" },
+      Thailand: { iso2: "TH", region: "apac" },
+      Tunisia: { iso2: "TN", region: "mea" },
+      Turkey: { iso2: "TR", region: "europe" },
+      Ukraine: { iso2: "UA", region: "europe" },
+      "United Arab Emirates": { iso2: "AE", region: "mea" },
+      "United Kingdom": { iso2: "GB", region: "europe" },
+      "United States": { iso2: "US", region: "americas" },
+      Uruguay: { iso2: "UY", region: "americas" },
+      Vietnam: { iso2: "VN", region: "apac" }
     };
 
-    const countryToIso2 = {
-      Argentina: "AR",
-      Australia: "AU",
-      Austria: "AT",
-      Bahrain: "BH",
-      Belgium: "BE",
-      Brazil: "BR",
-      Canada: "CA",
-      Chile: "CL",
-      Denmark: "DK",
-      France: "FR",
-      Germany: "DE",
-      Greece: "GR",
-      India: "IN",
-      Indonesia: "ID",
-      Israel: "IL",
-      Italy: "IT",
-      Japan: "JP",
-      Kenya: "KE",
-      Lithuania: "LT",
-      Luxembourg: "LU",
-      Mexico: "MX",
-      Nepal: "NP",
-      Netherlands: "NL",
-      Norway: "NO",
-      Poland: "PL",
-      Portugal: "PT",
-      Qatar: "QA",
-      Romania: "RO",
-      "Saudi Arabia": "SA",
-      Singapore: "SG",
-      "South Africa": "ZA",
-      Spain: "ES",
-      Switzerland: "CH",
-      Taiwan: "TW",
-      "United Arab Emirates": "AE",
-      "United Kingdom": "GB",
-      "United States": "US"
+    const COUNTRY_REGION = {
+      europe: new Set(),
+      americas: new Set(),
+      apac: new Set(),
+      mea: new Set(),
+      africa: new Set()
     };
+    const countryToIso2 = {};
+    for (const [name, { iso2, region }] of Object.entries(COUNTRY_REGISTRY)) {
+      countryToIso2[name] = iso2;
+      COUNTRY_REGION[region].add(name);
+    }
 
     function iso2ToFlagEmoji(iso2) {
       return iso2
@@ -2352,7 +2393,7 @@
     }
 
     function renderCountryFlag(countryValue) {
-      const country = normalize(countryValue);
+      const country = normalizeCountryName(countryValue);
       if (!country || country === "TBD" || country === "Various") return "—";
       if (isGlobalCountry(country)) {
         return `<span class="country-flag country-flag-global"${tipDataAttr(country)} aria-label="${escapeHtml(country)}">${globalCountryFlagSvg()}</span>`;
@@ -2479,7 +2520,7 @@
         if (label === "Name") parts.push("m-head");
         else if (label === "Favorite") parts.push("m-fav");
         else if (label === "Actions") parts.push("m-actions");
-        else if (label === "Next Deadline" || label === "Site") parts.push("m-foot");
+        else if (label === "Next Deadline") parts.push("m-foot");
         else parts.push("m-field");
         const isDeadlineCol = label === "CfP" || label === "CfT" || label === "CfW";
         const empty = !String(value == null ? "" : value).trim();
@@ -2518,9 +2559,7 @@
             td("City", escapeHtml(normalize(r.city))),
             td("Country", renderCountryFlag(r.country), "country-col")
           );
-          if (attendee) {
-            cells.push(td("Site", linkOrText(r.website_or_cfp_link, "Site"), "attendee-only-col"));
-          } else {
+          if (!attendee) {
             cells.push(td("Next Deadline", renderNextDeadline(r)));
           }
           cells.push(td("Actions", renderRowActions(r), "table-action-cell"));
@@ -2713,7 +2752,7 @@
 
     function countryMatchesRegion(country, region) {
       if (!region) return true;
-      const c = normalize(country);
+      const c = normalizeCountryName(country);
       if (!c || c === "TBD" || c === "Global" || c === "Virtual") return false;
       const set = COUNTRY_REGION[region];
       return set ? set.has(c) : true;
@@ -2991,7 +3030,19 @@
         uae: "United Arab Emirates",
         "chinese taipei": "Taiwan",
         worldwide: "Global",
-        international: "Global"
+        international: "Global",
+        czechia: "Czech Republic",
+        turkiye: "Turkey",
+        türkiye: "Turkey",
+        korea: "South Korea",
+        "republic of korea": "South Korea",
+        holland: "Netherlands",
+        england: "United Kingdom",
+        scotland: "United Kingdom",
+        wales: "United Kingdom",
+        macedonia: "North Macedonia",
+        bosnia: "Bosnia and Herzegovina",
+        "hong kong sar": "Hong Kong"
       };
       return aliases[lowered] || country;
     }
@@ -3674,9 +3725,6 @@
       SPEAKER_ONLY_FILTER_KEYS.forEach((k) => {
         state.filters[k] = "";
       });
-      if (state.filters.sortBy === "deadline_soon") {
-        state.filters.sortBy = "start_soon";
-      }
       if (
         state.headerSort.key &&
         (state.headerSort.key.startsWith("accepts_") ||
@@ -3690,6 +3738,7 @@
       const cur = state.filters.sortBy || defaultSortByForPersona();
       const opts = isAttendeeMode()
         ? [
+            { v: "deadline_soon", l: "Soonest CfX deadline" },
             { v: "start_soon", l: "Conference date soonest" },
             { v: "name_asc", l: "Name A–Z" },
             { v: "attendees_name", l: "500+ attendees, then name" }
@@ -3820,7 +3869,10 @@
 
     function resetFilters() {
       closeConferenceDetail();
-      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : attendeePresetFilters();
+      state.filters = {
+        ...defaultFilters(),
+        sortBy: defaultSortByForPersona()
+      };
       state.headerSort = { key: "", direction: "asc" };
       localStorage.removeItem(STORAGE_KEY);
       applyFilterValuesToInputs();
