@@ -62,7 +62,3 @@ git push -u origin chore/update-conference-entry
 - Maintainers may request source verification for critical fields.
 - PRs with uncertain values should keep `TBD`/`Unknown` and include notes.
 - Keep changes scoped; avoid unrelated formatting churn.
-
-## Automated discovery (maintainers)
-
-Optional **`discovery/`** folder (gitignored by default): scrapers + pipeline. See `discovery/README.md` when present locally.

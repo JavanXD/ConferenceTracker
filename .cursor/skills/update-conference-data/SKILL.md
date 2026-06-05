@@ -31,7 +31,7 @@ description: >-
 | New or distinct regional edition | **Add** one row |
 | Duplicates | **Merge** per user intent |
 
-**Never** two rows for the same edition. Batch merges from `discovery/07_runtime/proposals/`: run `python discovery/06_review/step_01_validate_proposal.py`; see [00_HUMAN_REVIEW.md](../../../discovery/06_review/00_HUMAN_REVIEW.md).
+**Never** two rows for the same edition.
 
 ## Research
 
@@ -76,10 +76,6 @@ Quoted commas; empty optional links; bump `last_verified_date` on every touched 
 2. Key field changes  
 3. High-priority gaps still `TBD`/`Unknown`  
 4. Sources when non-obvious  
-
-## Discovery pipeline (optional)
-
-`discovery/` never writes `conferences.csv`. Merge **approved** proposals after human review and official re-check. See [discovery/README.md](../../../discovery/README.md).
 
 ## Verify locally (optional)
 

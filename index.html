@@ -221,11 +221,12 @@
           <select id="typeFilter" aria-label="In person, hybrid, or virtual"><option value="">All</option></select>
         </div>
         <div class="field advanced-filter">
-          <label for="sortFilter">Sort rows</label>
+          <label for="sortFilter">Sort by</label>
           <select id="sortFilter" aria-label="Sort table rows">
-            <option value="attendees_name">500+ attendees, then name</option>
+            <option value="deadline_soon">Soonest CfX deadline</option>
+            <option value="start_soon">Conference date soonest</option>
             <option value="name_asc">Name A–Z</option>
-            <option value="deadline_soon">Next deadline soonest</option>
+            <option value="attendees_name">500+ attendees, then name</option>
           </select>
         </div>
       </div>
@@ -276,6 +277,7 @@
                 <th data-filter-key="acceptsCfw" class="clickable-th speaker-only-col" scope="col"><button type="button" class="th-btn" aria-label="Cycle filter for call for workshops by deadline">CfW</button></th>
                 <th data-sort-key="conference_start_date" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference start date">Start</button></th>
                 <th data-sort-key="conference_end_date" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference end date">End</button></th>
+                <th data-sort-key="conference_duration_days" class="clickable-th duration-col-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by conference duration in days">Days</button></th>
                 <th data-sort-key="city" class="clickable-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by city">City</button></th>
                 <th data-sort-key="country" class="clickable-th country-col-th" scope="col" aria-sort="none"><button type="button" class="th-btn" aria-label="Sort by country"><span class="visually-hidden">Country</span></button></th>
                 <th class="attendee-only-col">Site</th>
@@ -378,6 +380,25 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <p class="footer-links">
+        <a
+          href="https://ko-fi.com/javanxd"
+          class="footer-support-link footer-kofi-link"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.47 2.22 6.43 5.31 7.37.14.04.28.07.43.07.27 0 .53-.1.74-.29L13 16.3V19h-2v3h8v-3h-2v-2.7l2.52-2.52c.21-.19.33-.46.33-.74 0-.15-.03-.29-.07-.43C20.28 12.22 20.5 9.5 20.5 6V5c0-1.1-.9-2-2-2zm-1 3v1.5c0 2.48-1.02 4.5-2.5 4.5S12.5 10.48 12.5 8V6h5zM4 5h1v3.5c0 2.9 1.92 5.34 4.57 6.06V19H4v2h2v-5.06C3.92 14.84 2 11.4 2 8.5V7c0-1.1.9-2 2-2z"/></svg>
+          <span>Ko-fi</span>
+        </a>
+        <a
+          href="https://buymeacoffee.com/javanxd"
+          class="footer-support-link footer-bmc-link"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <svg class="footer-support-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.47 2.22 6.43 5.31 7.37.14.04.28.07.43.07.27 0 .53-.1.74-.29L13 16.3V19h-2v3h8v-3h-2v-2.7l2.52-2.52c.21-.19.33-.46.33-.74 0-.15-.03-.29-.07-.43C20.28 12.22 20.5 9.5 20.5 6V5c0-1.1-.9-2-2-2zm-1 3v1.5c0 2.48-1.02 4.5-2.5 4.5S12.5 10.48 12.5 8V6h5zM4 5h1v3.5c0 2.9 1.92 5.34 4.57 6.06V19H4v2h2v-5.06C3.92 14.84 2 11.4 2 8.5V7c0-1.1.9-2 2-2z"/></svg>
+          <span>Buy me a coffee</span>
+        </a>
+        <span class="footer-sep" aria-hidden="true">·</span>
         <button type="button" class="footer-link-btn" id="footerShortcutsBtn" aria-label="Open keyboard shortcuts">?<span class="visually-hidden"> Keyboard shortcuts</span></button>
       </p>
       <p id="footerStatus" class="footer-status" role="status" aria-live="polite"></p>

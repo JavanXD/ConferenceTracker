@@ -87,12 +87,23 @@
       };
     }
 
+    function defaultSortByForPersona(mode = state.personaMode) {
+      return mode === "attendee" ? "start_soon" : "deadline_soon";
+    }
+
     function speakerPresetFilters() {
       return {
         ...defaultFilters(),
         acceptsCfp: "Yes",
         actionableCfp: "yes",
         sortBy: "deadline_soon"
+      };
+    }
+
+    function attendeePresetFilters() {
+      return {
+        ...defaultFilters(),
+        sortBy: "start_soon"
       };
     }
 
@@ -439,7 +450,7 @@
       const params = new URLSearchParams(window.location.search);
       Object.entries(state.filters).forEach(([key, value]) => {
         const normalized = normalize(value);
-        if (!normalized || (key === "sortBy" && normalized === "attendees_name")) {
+        if (!normalized || (key === "sortBy" && normalized === defaultSortByForPersona())) {
           params.delete(key);
           return;
         }
@@ -1080,8 +1091,15 @@
       const dateNote = isProjectedEditionDates(row)
         ? ' <span class="detail-date-est">(next occurrence est. from last edition)</span>'
         : "";
+      const durationDays = conferenceDurationDays(row);
+      const durationNote =
+        durationDays === null
+          ? ""
+          : durationDays === 1
+            ? " · 1 day"
+            : ` · ${durationDays} days`;
       body.push(
-        `<dt>Dates</dt><dd>${escapeHtml(formatDisplayConferenceDate(row, "start"))} → ${escapeHtml(formatDisplayConferenceDate(row, "end"))}${dateNote}</dd>`
+        `<dt>Dates</dt><dd>${escapeHtml(formatDisplayConferenceDate(row, "start"))} → ${escapeHtml(formatDisplayConferenceDate(row, "end"))}${escapeHtml(durationNote)}${dateNote}</dd>`
       );
       if (!isAttendeeMode()) {
         body.push(`<dt>CfP mo.</dt><dd>${escapeHtml(normalize(row.cfp_deadline_month))}</dd>`);
@@ -1247,13 +1265,28 @@
       state.filters = speakerPresetFilters();
     }
 
+    function maybeApplyAttendeeDiscoverDefaults() {
+      if (state.personaMode !== "attendee") return;
+      try {
+        if (localStorage.getItem(STORAGE_KEY)) return;
+      } catch (err) {
+        console.warn(err);
+      }
+      const params = new URLSearchParams(window.location.search);
+      const filterKeys = new Set(Object.keys(defaultFilters()));
+      const hasUrlFilters = [...params.keys()].some((k) => filterKeys.has(k));
+      if (hasUrlFilters) return;
+      state.filters = attendeePresetFilters();
+    }
+
     function isGenericDefaultFilters() {
       const f = state.filters;
       const d = defaultFilters();
       const extraKeys = ["region", "actionableCfp", "industryTalks", "inPipeline"];
       for (const key of Object.keys(d)) {
         if (key === "sortBy") {
-          if (normalize(f.sortBy) && normalize(f.sortBy) !== normalize(d.sortBy) && f.sortBy !== "deadline_soon") {
+          const genericSorts = new Set(["deadline_soon", "start_soon", d.sortBy]);
+          if (normalize(f.sortBy) && !genericSorts.has(f.sortBy)) {
             return false;
           }
           continue;
@@ -1269,6 +1302,10 @@
       state.personaMode = mode;
       if (mode === "attendee" && prevMode !== "attendee") {
         clearSpeakerOnlyFilters();
+        if (isGenericDefaultFilters()) {
+          state.filters = attendeePresetFilters();
+          state.headerSort = { key: "", direction: "asc" };
+        }
         applyFilterValuesToInputs();
       }
       if (mode === "speaker" && prevMode !== "speaker" && isGenericDefaultFilters()) {
@@ -1816,7 +1853,7 @@
       if (el.sponsorshipFilter) el.sponsorshipFilter.value = state.filters.sponsorship;
       if (el.typeFilter) el.typeFilter.value = state.filters.conferenceType;
       if (el.favoritesFilter) el.favoritesFilter.value = state.filters.favoritesOnly;
-      if (el.sortFilter) el.sortFilter.value = state.filters.sortBy || "attendees_name";
+      if (el.sortFilter) el.sortFilter.value = state.filters.sortBy || defaultSortByForPersona();
     }
 
     function filterOptionLabel(key, value) {
@@ -2477,6 +2514,7 @@
           cells.push(
             td("Start", renderConferenceDateCell(r, "start")),
             td("End", renderConferenceDateCell(r, "end")),
+            td("Days", renderConferenceDurationCell(r), "duration-col"),
             td("City", escapeHtml(normalize(r.city))),
             td("Country", renderCountryFlag(r.country), "country-col")
           );
@@ -2571,6 +2609,28 @@
         return normalize(which === "start" ? row.conference_start_date : row.conference_end_date) || "TBD";
       }
       return formatIsoDateLocal(eff);
+    }
+
+    function conferenceDurationDays(row) {
+      const start = effectiveConferenceStartDate(row);
+      const end = effectiveConferenceEndDate(row);
+      if (!start || !end) return null;
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const span = Math.round((end - start) / msPerDay);
+      if (span < 0) return null;
+      return span + 1;
+    }
+
+    function conferenceDurationOrder(row) {
+      const days = conferenceDurationDays(row);
+      return days === null ? Number.MAX_SAFE_INTEGER : days;
+    }
+
+    function renderConferenceDurationCell(row) {
+      const days = conferenceDurationDays(row);
+      if (days === null) return escapeHtml("TBD");
+      const label = days === 1 ? "1 calendar day" : `${days} calendar days`;
+      return `<span class="conference-duration" title="${escapeHtml(label)}">${days}d</span>`;
     }
 
     function renderConferenceDateCell(row, which) {
@@ -2765,6 +2825,11 @@
 
       const bestPast = resolved.reduce((a, b) => (a.daysUntil > b.daysUntil ? a : b));
       return { ...bestPast, isPast: true, isProjected: false };
+    }
+
+    function soonestCfxDaysUntil(row) {
+      const info = getNextDeadlineInfo(row);
+      return info ? info.daysUntil : 9999;
     }
 
     function formatNextDeadlineText(info) {
@@ -3284,6 +3349,9 @@
           isoDateOrder(formatDisplayConferenceDate(a, key === "conference_start_date" ? "start" : "end")) -
           isoDateOrder(formatDisplayConferenceDate(b, key === "conference_start_date" ? "start" : "end"));
         if (diff !== 0) return diff * mul;
+      } else if (key === "conference_duration_days") {
+        const diff = conferenceDurationOrder(a) - conferenceDurationOrder(b);
+        if (diff !== 0) return diff * mul;
       } else if (key === "cfp_deadline_month") {
         const diff = monthOrder(a[key]) - monthOrder(b[key]);
         if (diff !== 0) return diff * mul;
@@ -3306,7 +3374,7 @@
         sorted.sort((a, b) => compareHeaderSort(a, b, state.headerSort.key, state.headerSort.direction));
         return sorted;
       }
-      const sortBy = state.filters.sortBy || "attendees_name";
+      const sortBy = state.filters.sortBy || defaultSortByForPersona();
       const sorted = [...rows];
       if (sortBy === "name_asc") {
         sorted.sort((a, b) => normalize(a.conference_name).localeCompare(normalize(b.conference_name)));
@@ -3318,11 +3386,8 @@
         });
       } else if (sortBy === "deadline_soon") {
         sorted.sort((a, b) => {
-          const aInfo = getNextDeadlineInfo(a);
-          const bInfo = getNextDeadlineInfo(b);
-          const aDays = aInfo ? aInfo.daysUntil : 9999;
-          const bDays = bInfo ? bInfo.daysUntil : 9999;
-          if (aDays !== bDays) return aDays - bDays;
+          const diff = soonestCfxDaysUntil(a) - soonestCfxDaysUntil(b);
+          if (diff !== 0) return diff;
           return normalize(a.conference_name).localeCompare(normalize(b.conference_name));
         });
       } else if (sortBy === "start_soon") {
@@ -3401,7 +3466,7 @@
       state.filters.sponsorship = normalize(el.sponsorshipFilter.value);
       state.filters.conferenceType = normalize(el.typeFilter.value);
       state.filters.favoritesOnly = normalize(el.favoritesFilter?.value);
-      state.filters.sortBy = normalize(el.sortFilter.value) || "attendees_name";
+      state.filters.sortBy = normalize(el.sortFilter.value) || defaultSortByForPersona();
       if (state.filters.acceptsCft || state.filters.acceptsCfw) {
         state.filters.cftOrCfw = "";
       }
@@ -3496,9 +3561,9 @@
         return;
       }
       if (preset === "favorites_only") {
-        state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : defaultFilters();
+        state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : attendeePresetFilters();
         state.filters.favoritesOnly = "yes";
-        state.filters.sortBy = "deadline_soon";
+        state.filters.sortBy = defaultSortByForPersona();
         state.headerSort = { key: "", direction: "asc" };
         applyFilterValuesToInputs();
         rerender();
@@ -3516,7 +3581,7 @@
         applySpeakerPreset("industry");
         return;
       }
-      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : defaultFilters();
+      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : attendeePresetFilters();
       if (preset === "open_cfp") {
         state.filters.acceptsCfp = "Yes";
         state.filters.actionableCfp = "";
@@ -3531,7 +3596,7 @@
       if (preset === "due_30") state.filters.deadlineWindow = "30";
       if (preset === "high_priority" || preset === "attendees_500") state.filters.attendees = "Yes";
       if (preset === "academic") state.filters.academicLevel = "Academic";
-      state.filters.sortBy = "deadline_soon";
+      state.filters.sortBy = defaultSortByForPersona();
       state.headerSort = { key: "", direction: "asc" };
       applyFilterValuesToInputs();
       rerender();
@@ -3610,7 +3675,7 @@
         state.filters[k] = "";
       });
       if (state.filters.sortBy === "deadline_soon") {
-        state.filters.sortBy = "attendees_name";
+        state.filters.sortBy = "start_soon";
       }
       if (
         state.headerSort.key &&
@@ -3622,17 +3687,18 @@
     }
 
     function sortFilterOptionsHtml() {
-      const cur = state.filters.sortBy || "attendees_name";
+      const cur = state.filters.sortBy || defaultSortByForPersona();
       const opts = isAttendeeMode()
         ? [
-            { v: "attendees_name", l: "500+ attendees, then name" },
+            { v: "start_soon", l: "Conference date soonest" },
             { v: "name_asc", l: "Name A–Z" },
-            { v: "start_soon", l: "Conference date soonest" }
+            { v: "attendees_name", l: "500+ attendees, then name" }
           ]
         : [
-            { v: "attendees_name", l: "500+ attendees, then name" },
+            { v: "deadline_soon", l: "Soonest CfX deadline" },
+            { v: "start_soon", l: "Conference date soonest" },
             { v: "name_asc", l: "Name A–Z" },
-            { v: "deadline_soon", l: "Next deadline soonest" }
+            { v: "attendees_name", l: "500+ attendees, then name" }
           ];
       return opts
         .map((o) => `<option value="${o.v}"${cur === o.v ? " selected" : ""}>${escapeHtml(o.l)}</option>`)
@@ -3659,7 +3725,7 @@
         el.sortFilter.innerHTML = sortFilterOptionsHtml();
         const allowed = [...el.sortFilter.options].map((o) => o.value);
         if (!allowed.includes(state.filters.sortBy)) {
-          state.filters.sortBy = "attendees_name";
+          state.filters.sortBy = defaultSortByForPersona();
         }
       }
       updateTableHeaderForPersona();
@@ -3734,7 +3800,7 @@
 
     function resetFilters() {
       closeConferenceDetail();
-      state.filters = defaultFilters();
+      state.filters = state.personaMode === "speaker" ? speakerPresetFilters() : attendeePresetFilters();
       state.headerSort = { key: "", direction: "asc" };
       localStorage.removeItem(STORAGE_KEY);
       applyFilterValuesToInputs();
@@ -4250,6 +4316,7 @@
       loadFilters();
       readFiltersFromUrl();
       maybeApplySpeakerDiscoverDefaults();
+      maybeApplyAttendeeDiscoverDefaults();
       loadUiPrefs();
       loadPlanningPrefs();
       if (isAttendeeMode()) {

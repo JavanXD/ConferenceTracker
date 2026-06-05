@@ -34,8 +34,6 @@ You can use the **public deployment**, **self-host** a copy, or **run locally**�
 | **Curators / AI agents** | [`.cursor/skills/update-conference-data/SKILL.md`](.cursor/skills/update-conference-data/SKILL.md) — research workflow (points at CATALOG) |
 | **Pull requests** | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
-Legacy CSV columns removed: `accepts_cfp` … `accepts_cfv`, `cfp_deadline_month` (derived on load). Backups: `conferences.csv.bak-2026-06-01`, `conferences.csv.bak-2026-06-01-pre-cfp-month`.
-
 **Quick prompt for agents:** follow the skill above; return added/updated counts, touched names, remaining gaps, and sources.
 
 ## Pull Request Contribution Flow
@@ -93,16 +91,6 @@ The UI includes **Backup & restore**: export or import a JSON file of everything
 - **Copy shareable link** — Copies the current URL (filters and `persona` / `view` params) for others or another device.
 - **Calendar (.ics)** — From the detail panel, download an all-day event for the **next upcoming** CfP/CfT/CfW deadline (when the CSV has a valid date).
 
-## Discovery tooling (optional, gitignored)
-
-Scraping and pipeline automation live in **`discovery/`** (excluded from git — see `discovery/README.md` after you create it locally). Produces proposal CSVs for review; does **not** change `conferences.csv` by default.
-
-```bash
-discovery/02_collect/.venv/bin/python discovery/04_orchestrate/step_10_sync.py --research --backend web
-```
-
-Merge approved rows with the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md). Details: `discovery/00_STEP_ORDER.md`, `discovery/04_orchestrate/GITHUB_ACTIONS.md`.
-
 ## Verifying catalog data
 
-Use the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md); spot-check in the app and the browser console. Discovery merges: `discovery/06_review/step_01_validate_proposal.py` and [00_HUMAN_REVIEW.md](discovery/06_review/00_HUMAN_REVIEW.md).
+Use the [update-conference-data skill](.cursor/skills/update-conference-data/SKILL.md); spot-check in the app and the browser console. Run `python3 scripts/validate_catalog.py` before opening a PR.

@@ -7,5 +7,6 @@ conferences.csv.bak*
 
 TODO.md
 
-# Discovery tooling (scrapers + pipeline) — local only for now
+# Local-only tooling
 /discovery/
+/scripts/scrapers/
