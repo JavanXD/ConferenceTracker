@@ -10,23 +10,15 @@
   <meta name="author" content="Conference Tracker" />
   <meta name="theme-color" content="#f4f7f5" />
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
-  <script>
-    (function () {
-      try {
-        var theme = "light";
-        var raw = localStorage.getItem("conference_dashboard_ui_prefs_v1");
-        if (raw) {
-          var prefs = JSON.parse(raw);
-          if (prefs.theme === "dark" || prefs.theme === "light") theme = prefs.theme;
-        }
-        document.documentElement.setAttribute("data-theme", theme);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute("content", theme === "light" ? "#f4f7f5" : "#050707");
-      } catch (e) {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-    })();
-  </script>
+  <style>
+    .site-footer { margin-top: 8px; padding: 20px 16px 16px; border-top: 1px solid #1f3a2f; background: #0a0f0c; }
+    .footer-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 18px 24px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .footer-brand { grid-column: 1 / -1; } }
+    @media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
+  </style>
+  <script src="./assets/bootstrap.js?v=577ac28" data-v="577ac28"></script>
+  <link id="appStyles" rel="stylesheet" href="./styles.css?v=577ac28" />
   <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" sizes="any" />
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
   <link rel="canonical" href="https://conference-tracker.javan.de/" />
@@ -51,7 +43,7 @@
   <meta name="twitter:image" content="https://conference-tracker.javan.de/assets/social-preview.png" />
   <meta name="twitter:image:alt" content="Cybersecurity Conference Tracker with global CFP, CFT, and CFW deadline insights." />
   <link rel="image_src" href="https://conference-tracker.javan.de/assets/social-preview.png" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com 'sha256-JcrWKCsKO6okbijc+a0QhE+iK74aUAZh/WOWYlihhTE=' 'sha256-2zpnbt9MgK31LKvy+zZ1qYMO/3XDLr2Ukzm8AVGXVII='; style-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://cdnjs.cloudflare.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org; connect-src 'self' https://geocoding-api.open-meteo.com; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; img-src 'self' data: https://cdnjs.cloudflare.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org; connect-src 'self' https://geocoding-api.open-meteo.com; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Permissions-Policy" content="accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" />
   <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
@@ -90,7 +82,7 @@
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   />
-  <link rel="stylesheet" href="./styles.css?v=577ac28" />
+  <noscript><link rel="stylesheet" href="./styles.css?v=577ac28" /></noscript>
 </head>
 <body>
   <a class="skip-link" href="#appMain">Skip to main content</a>

@@ -11,8 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_FILES = ("index.html", "impressum.html", "privacy.html")
 ASSET_RE = re.compile(
-    r'(\./(?:styles\.css|app\.js|assets/obfuscate-email\.js))(?:\?v=[^"\']+)?'
+    r'(\./(?:styles\.css|app\.js|assets/bootstrap\.js|assets/obfuscate-email\.js))(?:\?v=[^"\']+)?'
 )
+ASSET_DATA_V_RE = re.compile(r'(data-v=")[^"]*(")')
 
 
 def git_short_sha() -> str:
@@ -26,6 +27,7 @@ def git_short_sha() -> str:
 def stamp_file(path: Path, version: str) -> bool:
     original = path.read_text(encoding="utf-8")
     updated = ASSET_RE.sub(rf"\1?v={version}", original)
+    updated = ASSET_DATA_V_RE.sub(rf"\g<1>{version}\g<2>", updated)
     if updated == original:
         return False
     path.write_text(updated, encoding="utf-8")

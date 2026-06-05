@@ -10,22 +10,9 @@
   <link rel="canonical" href="https://conference-tracker.javan.de/impressum.html" />
   <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" sizes="any" />
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
-  <script>
-    (function () {
-      try {
-        var theme = "light";
-        var raw = localStorage.getItem("conference_dashboard_ui_prefs_v1");
-        if (raw) {
-          var prefs = JSON.parse(raw);
-          if (prefs.theme === "dark" || prefs.theme === "light") theme = prefs.theme;
-        }
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch (e) {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-    })();
-  </script>
-  <link rel="stylesheet" href="./styles.css?v=577ac28" />
+  <script src="./assets/bootstrap.js?v=577ac28" data-v="577ac28"></script>
+  <link id="appStyles" rel="stylesheet" href="./styles.css?v=577ac28" />
+  <noscript><link rel="stylesheet" href="./styles.css?v=577ac28" /></noscript>
 </head>
 <body class="legal-page-body">
   <main class="legal-page" id="appMain">
