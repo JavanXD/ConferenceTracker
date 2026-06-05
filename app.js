@@ -1,4 +1,4 @@
-    const CSV_PATH = "data/conferences.csv";
+    const CSV_PATHS = ["data/conferences.csv", "conferences.csv"];
     const STORAGE_KEY = "conference_dashboard_filters_v1";
     const GEO_CACHE_KEY = "conference_dashboard_geo_cache_v3";
     const UI_PREFS_KEY = "conference_dashboard_ui_prefs_v1";
@@ -3779,10 +3779,30 @@
     }
 
     async function loadCsvAndRender() {
-      const csvUrl = `${CSV_PATH}?t=${Date.now()}`;
-      const res = await fetch(csvUrl, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Failed to load CSV: HTTP ${res.status}`);
-      const csvText = await res.text();
+      let csvText = "";
+      let loadedFrom = "";
+      let lastError = null;
+      for (const csvPath of CSV_PATHS) {
+        const csvUrl = `${csvPath}?t=${Date.now()}`;
+        try {
+          const res = await fetch(csvUrl, { cache: "no-store" });
+          if (!res.ok) {
+            lastError = new Error(`Failed to load CSV from ${csvPath}: HTTP ${res.status}`);
+            continue;
+          }
+          csvText = await res.text();
+          loadedFrom = csvPath;
+          break;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      if (!csvText) {
+        throw lastError || new Error("Failed to load CSV: no candidate path succeeded");
+      }
+      if (loadedFrom !== CSV_PATHS[0]) {
+        console.warn(`Loaded catalog from legacy path ${loadedFrom}; expected ${CSV_PATHS[0]}.`);
+      }
       const parsed = Papa.parse(csvText, {
         header: true,
         skipEmptyLines: true,
