@@ -281,8 +281,8 @@ Cross-cutting: **trust** (verification), **fresh data** (`conferences.csv` + pip
 - [x] Meta referrer already present on homepage; documented Worker as HTTP-header source
 - [x] Root `/favicon.ico` (copy of `assets/favicon.ico`) so `/favicon.ico` is not 404
 - [x] OG PNG already shipped (`assets/social-preview.png`)
-- [ ] Optional: drop GitHub Pages `Access-Control-Allow-Origin: *` (low)
-- [ ] Optional: move CSP from meta http-equiv to HTTP header via Worker (meta `frame-ancestors` is ignored by browsers; Worker XFO covers framing)
+- [x] Optional: drop GitHub Pages `Access-Control-Allow-Origin: *` (low) *(stripped via `javan-gh-pages-headers`)*
+- [x] Optional: move CSP from meta http-equiv to HTTP header via Worker (meta `frame-ancestors` is ignored by browsers; Worker XFO covers framing) *(HTTP CSP set by `javan-gh-pages-headers` 2026-08-30; mirrors prior meta allowlist)*
 
 ## Needs your decision
 
