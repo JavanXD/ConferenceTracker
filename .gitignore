@@ -10,3 +10,13 @@ TODO.md
 # Local-only tooling
 /discovery/
 /scripts/scrapers/
+node_modules/
+dist/
+build/
+.wrangler/
+.dev.vars
+.dev.vars.*
+__pycache__/
+.venv/
+*.log
+coverage/
