@@ -1,0 +1,12 @@
+.env
+.env.local
+*.pem
+.DS_Store
+conferences copy.csv
+data/conferences.csv.bak*
+
+TODO.md
+
+# Local-only tooling
+/discovery/
+/scripts/scrapers/

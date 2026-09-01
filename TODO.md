@@ -286,4 +286,4 @@ Cross-cutting: **trust** (verification), **fresh data** (`conferences.csv` + pip
 
 ## Needs your decision
 
-- [ ] Keep `javan-gh-pages-headers` Worker for this GH Pages host long-term, or migrate to Cloudflare Pages?
+- [x] **`javan-gh-pages-headers` retired for this host.** Canonical is `conference-tracker.rasok.at` (Worker assets, 2026-09-01 cutover). Old GH Pages host **301s**. Header-only Worker on Javan is being retired globally (quota-free decision 2026-09-01). Optional later: `_headers` on the rasok Worker if it still uses `run_worker_first` only for headers.

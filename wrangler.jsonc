@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Script `conference-tracker` on `rasok.at - Dev`. Canonical: conference-tracker.rasok.at.
+	// conference-tracker.javan.de → 301 conference-tracker.rasok.at (Single Redirect; GH Pages CNAME removed).
+	"name": "conference-tracker",
+	"account_id": "50fb3a347b42343ea037a40ec214ba4c",
+	"compatibility_date": "2026-08-31",
+	"workers_dev": false,
+	"preview_urls": false,
+	"routes": [
+		{
+			"pattern": "conference-tracker.rasok.at",
+			"custom_domain": true
+		}
+	],
+	"assets": {
+		"directory": "./public",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page"
+	},
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	}
+}
